@@ -14,8 +14,10 @@ set_tests_properties(test_loader PROPERTIES LABELS "model")
 
 pf_add_test(test_graph_blocks)
 pf_add_test(test_ner)
+pf_add_test(test_tokenizer)
 
 pf_add_test(test_parity)
 pf_add_test(test_window_stitch)
-set_tests_properties(test_parity test_window_stitch PROPERTIES LABELS "model"
-    ENVIRONMENT "PF_FIXTURES=${CMAKE_SOURCE_DIR}/tests/fixtures/hf")
+set_tests_properties(test_parity test_window_stitch test_tokenizer
+    PROPERTIES ENVIRONMENT "PF_FIXTURES=${CMAKE_SOURCE_DIR}/tests/fixtures/hf")
+set_tests_properties(test_parity test_window_stitch PROPERTIES LABELS "model")

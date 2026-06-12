@@ -3,8 +3,10 @@
 //   pf-cli --model <model.gguf> --tokens <tokens.i32> [--device cpu|vulkan]
 //          [--threads N] [--dump-taps DIR] [--logits-out FILE]
 #include "gguf_loader.h"
+#include "pf.h"
 #include "model.h"
 #include "ner.h"
+#include "tokenizer.h"
 
 #include <cstdio>
 #include <cstring>
@@ -74,9 +76,86 @@ static bool dump_taps(const pf::tap_map & taps, int64_t n_tok, const std::string
     return true;
 }
 
+// Differential-test workhorse: read a pack of texts ([u32 n] then per text
+// [u32 len][bytes]), tokenize each (vocab only, no weights), write a pack of
+// results ([u32 n_tok][ids i32 x n][offsets i32 x 2n] per text).
+static int tok_batch(const char * gguf, const char * in_path, const char * out_path) {
+    pf::model_file mf;
+    if (!mf.open(gguf, /*with_data =*/ false)) {
+        std::fprintf(stderr, "%s\n", mf.error.c_str());
+        return 1;
+    }
+    pf::tokenizer tk;
+    if (!tk.load(mf.guf)) {
+        std::fprintf(stderr, "%s\n", tk.error.c_str());
+        return 1;
+    }
+    FILE * in = std::fopen(in_path, "rb");
+    FILE * out = std::fopen(out_path, "wb");
+    if (!in || !out) {
+        std::fprintf(stderr, "cannot open %s / %s\n", in_path, out_path);
+        return 1;
+    }
+    uint32_t n_texts = 0;
+    if (std::fread(&n_texts, 4, 1, in) != 1) return 1;
+    std::vector<char> buf;
+    for (uint32_t i = 0; i < n_texts; i++) {
+        uint32_t len = 0;
+        if (std::fread(&len, 4, 1, in) != 1) return 1;
+        buf.resize(len);
+        if (len && std::fread(buf.data(), 1, len, in) != len) return 1;
+        const auto toks = tk.encode(buf.data(), len);
+        const uint32_t n = (uint32_t) toks.size();
+        std::fwrite(&n, 4, 1, out);
+        for (const auto & t : toks) std::fwrite(&t.id, 4, 1, out);
+        for (const auto & t : toks) {
+            std::fwrite(&t.start, 4, 1, out);
+            std::fwrite(&t.end, 4, 1, out);
+        }
+    }
+    std::fclose(in);
+    std::fclose(out);
+    return 0;
+}
+
 int main(int argc, char ** argv) {
     if (argc == 3 && std::strcmp(argv[1], "--info") == 0) {
         return info(argv[2]);
+    }
+    if (argc == 5 && std::strcmp(argv[1], "--tok-batch") == 0) {
+        return tok_batch(argv[2], argv[3], argv[4]);
+    }
+    // full pipeline through the public C API: pf-cli --classify <model> <<< text
+    if ((argc == 4 || argc == 5) && std::strcmp(argv[1], "--classify") == 0) {
+        std::string text;
+        char buf[65536];
+        size_t r;
+        while ((r = std::fread(buf, 1, sizeof(buf), stdin)) > 0) text.append(buf, r);
+        if (!text.empty() && text.back() == '\n') text.pop_back();
+
+        pf_ctx * ctx = pf_load(argv[2], argc == 5 ? argv[4] : nullptr, 0);
+        if (pf_last_error(ctx)) {
+            std::fprintf(stderr, "load: %s\n", pf_last_error(ctx));
+            return 1;
+        }
+        pf_entity * ents = nullptr;
+        size_t n_ents = 0;
+        const float thr = argc >= 4 ? (float) std::atof(argv[3]) : 0.0f;
+        if (pf_classify(ctx, text.data(), text.size(), thr, &ents, &n_ents) != 0) {
+            std::fprintf(stderr, "classify: %s\n", pf_last_error(ctx));
+            return 1;
+        }
+        std::printf("[");
+        for (size_t i = 0; i < n_ents; i++) {
+            std::printf("%s\n {\"entity_group\": \"%s\", \"start\": %d, \"end\": %d, "
+                        "\"score\": %.4f, \"text\": \"%.*s\"}",
+                        i ? "," : "", ents[i].label, ents[i].start, ents[i].end,
+                        ents[i].score, ents[i].end - ents[i].start, text.data() + ents[i].start);
+        }
+        std::printf("\n]\n");
+        pf_entities_free(ents, n_ents);
+        pf_free(ctx);
+        return 0;
     }
 
     std::string model_path, tokens_path, taps_dir, logits_path, offsets_path, text_path;

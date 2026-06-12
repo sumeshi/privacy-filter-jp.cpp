@@ -31,6 +31,7 @@ add_library(pf STATIC
     src/model.cpp
     src/ner.cpp
     src/pf.cpp
+    src/tokenizer.cpp
 )
 target_include_directories(pf PUBLIC include)
 target_link_libraries(pf PUBLIC ggml)
