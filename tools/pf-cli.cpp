@@ -4,6 +4,7 @@
 //          [--threads N] [--dump-taps DIR] [--logits-out FILE]
 #include "gguf_loader.h"
 #include "model.h"
+#include "ner.h"
 
 #include <cstdio>
 #include <cstring>
@@ -78,23 +79,30 @@ int main(int argc, char ** argv) {
         return info(argv[2]);
     }
 
-    std::string model_path, tokens_path, taps_dir, logits_path, device = "cpu";
-    int threads = 0;
+    std::string model_path, tokens_path, taps_dir, logits_path, offsets_path, text_path;
+    std::string device = "cpu";
+    int threads = 0, window = 4096;
+    float threshold = 0.0f;
     for (int i = 1; i + 1 < argc; i += 2) {
         std::string a = argv[i];
-        if      (a == "--model")      model_path  = argv[i + 1];
-        else if (a == "--tokens")     tokens_path = argv[i + 1];
-        else if (a == "--dump-taps")  taps_dir    = argv[i + 1];
-        else if (a == "--logits-out") logits_path = argv[i + 1];
-        else if (a == "--device")     device      = argv[i + 1];
-        else if (a == "--threads")    threads     = std::atoi(argv[i + 1]);
+        if      (a == "--model")      model_path   = argv[i + 1];
+        else if (a == "--tokens")     tokens_path  = argv[i + 1];
+        else if (a == "--dump-taps")  taps_dir     = argv[i + 1];
+        else if (a == "--logits-out") logits_path  = argv[i + 1];
+        else if (a == "--offsets")    offsets_path = argv[i + 1];
+        else if (a == "--text")       text_path    = argv[i + 1];
+        else if (a == "--device")     device       = argv[i + 1];
+        else if (a == "--threads")    threads      = std::atoi(argv[i + 1]);
+        else if (a == "--window")     window       = std::atoi(argv[i + 1]);
+        else if (a == "--threshold")  threshold    = (float) std::atof(argv[i + 1]);
         else { std::fprintf(stderr, "unknown arg: %s\n", a.c_str()); return 2; }
     }
     if (model_path.empty() || tokens_path.empty()) {
         std::fprintf(stderr,
             "usage: pf-cli --info <model.gguf>\n"
             "       pf-cli --model <model.gguf> --tokens <tokens.i32> [--device cpu|vulkan]\n"
-            "              [--threads N] [--dump-taps DIR] [--logits-out FILE]\n");
+            "              [--threads N] [--window N] [--dump-taps DIR] [--logits-out FILE]\n"
+            "              [--offsets <offsets.i32> --text <text.txt> [--threshold F]]\n");
         return 2;
     }
 
@@ -127,6 +135,50 @@ int main(int argc, char ** argv) {
         if (!f) { std::fprintf(stderr, "cannot write %s\n", logits_path.c_str()); return 1; }
         std::fwrite(logits.data(), sizeof(float), logits.size(), f);
         std::fclose(f);
+    }
+
+    // Span mode: byte offsets from file (the tokenizer lands in P4), text for
+    // span extraction. Mirrors the LocalAI TokenClassify response assembly.
+    if (!offsets_path.empty() && !text_path.empty()) {
+        std::vector<int32_t> offs;
+        std::vector<char> text;
+        FILE * tf = std::fopen(text_path.c_str(), "rb");
+        if (!read_i32(offsets_path, offs) || !tf) {
+            std::fprintf(stderr, "cannot read offsets/text\n");
+            return 1;
+        }
+        std::fseek(tf, 0, SEEK_END);
+        text.resize(std::ftell(tf));
+        std::fseek(tf, 0, SEEK_SET);
+        if (std::fread(text.data(), 1, text.size(), tf) != text.size()) { std::fclose(tf); return 1; }
+        std::fclose(tf);
+
+        std::vector<pf::ner::tok_span> spans;
+        std::string err;
+        if (!pf::ner::classify_tokens(m, ids.data(), (int) ids.size(), window, threshold, spans, err)) {
+            std::fprintf(stderr, "classify error: %s\n", err.c_str());
+            return 1;
+        }
+        const pf::ner::label_table lt = pf::ner::build_label_table(m.file.labels);
+        std::printf("[");
+        bool first = true;
+        for (const auto & sp : spans) {
+            int bstart = offs[2 * sp.tok_begin];
+            int bend   = offs[2 * sp.tok_end + 1];
+            if (bstart < 0 || bend > (int) text.size() || bstart >= bend) continue;
+            // trim leading/trailing ASCII whitespace (o200k folds the leading
+            // space into the piece; mask the trimmed form)
+            while (bstart < bend && (unsigned char) text[bstart] <= ' ') bstart++;
+            while (bend > bstart && (unsigned char) text[bend - 1] <= ' ') bend--;
+            if (bstart >= bend) continue;
+            std::printf("%s\n {\"entity_group\": \"%s\", \"start\": %d, \"end\": %d, "
+                        "\"score\": %.4f, \"text\": \"%.*s\"}",
+                        first ? "" : ",", lt.category_name(sp.cat).c_str(), bstart, bend,
+                        sp.score, bend - bstart, text.data() + bstart);
+            first = false;
+        }
+        std::printf("\n]\n");
+        return 0;
     }
 
     // print argmax label per token as a quick eyeball

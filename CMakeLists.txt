@@ -29,6 +29,7 @@ add_library(pf STATIC
     src/backend.cpp
     src/gguf_loader.cpp
     src/model.cpp
+    src/ner.cpp
     src/pf.cpp
 )
 target_include_directories(pf PUBLIC include)

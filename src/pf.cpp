@@ -1,6 +1,7 @@
 #include "pf.h"
 
 #include "model.h"
+#include "ner.h"
 
 #include <cstdlib>
 #include <cstring>
@@ -59,15 +60,24 @@ int pf_logits(pf_ctx * ctx, const int32_t * ids, size_t n, float ** logits) {
     if (!ctx || !ids || n == 0) return -1;
     if (!ctx->error.empty()) return -1;
 
-    // P3 adds halo-window stitching for n > max_forward_tokens.
-    if ((int64_t) n > ctx->max_forward_tokens) {
-        ctx->error = "input exceeds forward window (windowing lands in P3)";
+    const int n_cls = ctx->m.hp().n_cls;
+    const int halo = ctx->m.hp().n_layer * ctx->m.hp().swa_radius;
+    const int W = ctx->max_forward_tokens;
+    if ((int) n > W && W <= 2 * halo) {
+        ctx->error = "input exceeds the forward window and exact windowing needs window > " +
+                     std::to_string(2 * halo);
         return -1;
     }
-    std::vector<float> out;
-    if (!ctx->m.forward(ids, (int64_t) n, out)) {
-        ctx->error = ctx->m.error;
-        return -1;
+    std::vector<float> out((size_t) n * n_cls);
+    std::vector<float> wlog;
+    for (const pf::ner::window & w : pf::ner::make_windows((int) n, W, halo)) {
+        if (!ctx->m.forward(ids + w.start, w.wlen, wlog)) {
+            ctx->error = ctx->m.error;
+            return -1;
+        }
+        std::memcpy(out.data() + (size_t) (w.start + w.lo) * n_cls,
+                    wlog.data() + (size_t) w.lo * n_cls,
+                    (size_t) (w.hi - w.lo) * n_cls * sizeof(float));
     }
     *logits = (float *) malloc(out.size() * sizeof(float));
     if (!*logits) return -1;
