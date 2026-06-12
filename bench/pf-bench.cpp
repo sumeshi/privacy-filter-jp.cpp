@@ -87,7 +87,9 @@ int main(int argc, char ** argv) {
         const std::string text = make_text(target);
         int64_t tok_us = 0, fwd_us = 0, dec_us = 0;
         size_t n_tok = 0;
-        for (int it = 0; it < iters; it++) {
+        // iteration -1 is an untimed warm-up: GPU backends compile pipelines
+        // lazily per shape class, which would otherwise dominate iteration 0
+        for (int it = -1; it < iters; it++) {
             int64_t t0 = ggml_time_us();
             const auto toks = tk.encode(text.data(), text.size());
             int64_t t1 = ggml_time_us();
@@ -106,9 +108,11 @@ int main(int argc, char ** argv) {
             const auto path = pf::ner::bioes_viterbi(lt, emit, (int) n_tok, m.hp().n_cls);
             const auto spans = pf::ner::assemble_spans(lt, path, emit, m.hp().n_cls);
             int64_t t3 = ggml_time_us();
-            tok_us += t1 - t0;
-            fwd_us += t2 - t1;
-            dec_us += t3 - t2;
+            if (it >= 0) {
+                tok_us += t1 - t0;
+                fwd_us += t2 - t1;
+                dec_us += t3 - t2;
+            }
             (void) spans;
         }
         const double fwd_ms = fwd_us / 1e3 / iters;
