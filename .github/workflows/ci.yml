@@ -2,10 +2,16 @@ name: ci
 
 on:
   push:
+    branches: [master]   # PR branches run via pull_request; avoids double runs
   pull_request:
   schedule:
     - cron: "20 3 * * *"   # tier 2 nightly
   workflow_dispatch:
+
+# A new push to a branch cancels its still-running CI for the previous commit.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   # Tier 1: no model assets — build matrix, fast tests, generated-file checks.
