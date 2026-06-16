@@ -1,7 +1,11 @@
 // pf-bench — tokens/s and per-stage latency at several document lengths.
-//   pf-bench <model.gguf> [device] [iters]
+//   pf-bench <model.gguf> [device] [iters] [lengths]
 // Synthesizes PII-shaped text, then per length: tokenize / forward (windowed)
 // / decode timings, plus RSS and cold-start (load -> first entity).
+// [lengths] is an optional comma-separated list of EXACT token counts (the
+// synthesized text is tokenized then truncated to each count) — use it to match
+// scripts/bench_torch.py for an apples-to-apples PyTorch comparison. Omitted, it
+// defaults to ~{128,512,2048,8192,32768}-token documents.
 #include "model.h"
 #include "ner.h"
 #include "tokenizer.h"
@@ -43,11 +47,23 @@ static std::string make_text(int approx_tokens) {
 
 int main(int argc, char ** argv) {
     if (argc < 2) {
-        std::fprintf(stderr, "usage: pf-bench <model.gguf> [cpu|vulkan] [iters]\n");
+        std::fprintf(stderr, "usage: pf-bench <model.gguf> [cpu|vulkan] [iters] [len1,len2,...]\n");
         return 2;
     }
     const char * device = argc > 2 ? argv[2] : "cpu";
     const int iters = argc > 3 ? std::atoi(argv[3]) : 3;
+
+    // Optional exact token-count list (4th arg): the synthesized text per length
+    // is truncated to exactly this many tokens, so the lengths match whatever is
+    // passed to scripts/bench_torch.py --lengths. Empty -> the approximate
+    // defaults below.
+    std::vector<int> lengths;
+    if (argc > 4) {
+        for (char * s = std::strtok(argv[4], ","); s; s = std::strtok(nullptr, ","))
+            if (int v = std::atoi(s)) lengths.push_back(v);
+    }
+    const bool exact = !lengths.empty();
+    if (!exact) lengths = { 128, 512, 2048, 8192, 32768 };
 
     const size_t rss0 = rss_kb("VmRSS:");
     const int64_t t_load0 = ggml_time_us();
@@ -83,7 +99,7 @@ int main(int argc, char ** argv) {
                 "tokens", "tok ms", "forward ms", "decode ms", "tok/s");
     std::printf("|---------:|----------:|------------:|----------:|---------:|\n");
 
-    for (const int target : { 128, 512, 2048, 8192, 32768 }) {
+    for (const int target : lengths) {
         const std::string text = make_text(target);
         int64_t tok_us = 0, fwd_us = 0, dec_us = 0;
         size_t n_tok = 0;
@@ -95,6 +111,8 @@ int main(int argc, char ** argv) {
             int64_t t1 = ggml_time_us();
             std::vector<int32_t> ids(toks.size());
             for (size_t i = 0; i < toks.size(); i++) ids[i] = toks[i].id;
+            // exact mode: truncate to the requested count (make_text overshoots)
+            if (exact && (int) ids.size() > target) ids.resize(target);
             n_tok = ids.size();
 
             std::vector<float> emit;

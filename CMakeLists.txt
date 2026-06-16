@@ -60,6 +60,11 @@ if (PF_BUILD_TOOLS)
     add_executable(pf-bench bench/pf-bench.cpp)
     target_link_libraries(pf-bench PRIVATE pf)
     target_include_directories(pf-bench PRIVATE src)
+
+    # GFLOP/s by dtype/shape -- diagnostic for the CPU matmul analysis
+    # (docs/cpu-perf.md). Links ggml directly; no pf/model deps.
+    add_executable(pf-gemm-bench bench/gemm_microbench.cpp)
+    target_link_libraries(pf-gemm-bench PRIVATE ggml)
 endif()
 
 if (PF_FUZZ)
