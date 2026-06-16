@@ -4,7 +4,7 @@
 // (interleaved pairing, freq_factors division, attn_factor application).
 #include "model.h"
 
-#include <ggml-cpu.h>
+#include <ggml-backend.h>
 #include <ggml.h>
 
 #include <cmath>
@@ -80,13 +80,24 @@ static void test_swa_mask() {
     }
 }
 
-// tiny single-op CPU eval helper
+// tiny single-op CPU eval helper. Uses the backend API rather than ggml-cpu's
+// ggml_graph_compute_with_ctx so it links in a GGML_BACKEND_DL build (where the
+// CPU compute symbols live in the variant .so, loaded at runtime). Tensors are
+// in a no_alloc=false ctx, so their ->data is CPU-resident and computed in place.
+static ggml_backend_t cpu_backend() {
+    static ggml_backend_t be = [] {
+        ggml_backend_load_all();
+        return ggml_backend_init_by_type(GGML_BACKEND_DEVICE_TYPE_CPU, nullptr);
+    }();
+    return be;
+}
+
 template <typename BUILD>
 static ggml_tensor * eval(ggml_context * ctx, BUILD build) {
     ggml_tensor * out = build();
     ggml_cgraph * gf = ggml_new_graph(ctx);
     ggml_build_forward_expand(gf, out);
-    ggml_graph_compute_with_ctx(ctx, gf, 2);
+    ggml_backend_graph_compute(cpu_backend(), gf);
     return out;
 }
 

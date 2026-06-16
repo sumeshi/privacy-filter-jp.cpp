@@ -1,5 +1,6 @@
 #include "backend.h"
 
+#include <ggml-backend.h>
 #include <ggml-cpu.h>
 
 #include <algorithm>
@@ -26,8 +27,29 @@ void parse_device(const std::string & req, std::string & name, int & index) {
 
 } // namespace
 
+// Discover dynamically-loadable backends once. For a GGML_BACKEND_DL +
+// GGML_CPU_ALL_VARIANTS build this loads every libggml-cpu-<isa>.so and ggml
+// scores them, so the host's best ISA (e.g. zen4/AVX-512) is selected at run
+// time -- the portable way to ship SIMD without baking -march into one binary
+// (and without Nix's wrapper silently dropping -march=native). No-op / harmless
+// for a statically-linked build, where backends register at static-init.
+static void load_backends_once() {
+    static const bool done = [] { ggml_backend_load_all(); return true; }();
+    (void) done;
+}
+
+// Set threads through the backend registry rather than ggml_backend_cpu_set_n_threads:
+// in a DL build that symbol lives in the variant .so, not in the linked base.
+static void set_cpu_threads(ggml_backend_t be, int n_threads) {
+    ggml_backend_reg_t reg = ggml_backend_dev_backend_reg(ggml_backend_get_device(be));
+    auto set_fn = (ggml_backend_set_n_threads_t)
+        ggml_backend_reg_get_proc_address(reg, "ggml_backend_set_n_threads");
+    if (set_fn) set_fn(be, n_threads);
+}
+
 bool engine_backend::init(const std::string & device_req, int n_threads) {
     release();
+    load_backends_once();
 
     std::string name;
     int         want_idx = 0;
@@ -40,12 +62,16 @@ bool engine_backend::init(const std::string & device_req, int n_threads) {
             return false;
         }
         device = "cpu";
+        if (const char * env = std::getenv("PF_NTHREADS")) {
+            // explicit override (tuning / benchmarking); 0 falls through to auto
+            if (int v = std::atoi(env)) n_threads = v;
+        }
         if (n_threads <= 0) {
             // ggml's default is 4 threads; matmul-heavy work wants the
             // physical cores (SMT siblings only add contention here)
             n_threads = std::max(1u, std::thread::hardware_concurrency() / 2);
         }
-        ggml_backend_cpu_set_n_threads(be, n_threads);
+        set_cpu_threads(be, n_threads);
     } else if (name == "gpu" || name == "cuda" || name == "vulkan") {
         // "gpu" picks the first GPU of whichever backend was compiled in;
         // "cuda"/"vulkan" pin a specific backend when more than one is built.

@@ -17,6 +17,18 @@
       "cacheVariables": { "CMAKE_BUILD_TYPE": "Release" }
     },
     {
+      "name": "release-portable",
+      "binaryDir": "${sourceDir}/build/release-portable",
+      "description": "Portable + fast CPU: build every ggml-cpu ISA variant and pick the best at runtime. Avoids -march=native (fragile, and stripped by Nix's NIX_ENFORCE_NO_NATIVE), so binaries run anywhere yet still use AVX-512/VNNI where present.",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Release",
+        "GGML_NATIVE": "OFF",
+        "GGML_BACKEND_DL": "ON",
+        "GGML_CPU_ALL_VARIANTS": "ON",
+        "CMAKE_RUNTIME_OUTPUT_DIRECTORY": "${sourceDir}/build/release-portable/bin"
+      }
+    },
+    {
       "name": "profile",
       "binaryDir": "${sourceDir}/build/profile",
       "cacheVariables": { "CMAKE_BUILD_TYPE": "RelWithDebInfo" }
@@ -35,11 +47,13 @@
   "buildPresets": [
     { "name": "debug",   "configurePreset": "debug" },
     { "name": "release", "configurePreset": "release" },
+    { "name": "release-portable", "configurePreset": "release-portable" },
     { "name": "profile", "configurePreset": "profile" },
     { "name": "fuzz",    "configurePreset": "fuzz" }
   ],
   "testPresets": [
     { "name": "debug",   "configurePreset": "debug",   "output": { "outputOnFailure": true } },
-    { "name": "release", "configurePreset": "release", "output": { "outputOnFailure": true } }
+    { "name": "release", "configurePreset": "release", "output": { "outputOnFailure": true } },
+    { "name": "release-portable", "configurePreset": "release-portable", "output": { "outputOnFailure": true } }
   ]
 }

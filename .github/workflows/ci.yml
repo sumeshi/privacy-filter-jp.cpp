@@ -13,7 +13,11 @@ jobs:
     strategy:
       matrix:
         include:
-          - { name: gcc-release, preset: release, cc: gcc, cxx: g++ }
+          # gcc-release builds the shipped CPU config: every ggml-cpu ISA variant
+          # (GGML_CPU_ALL_VARIANTS), runtime-dispatched -- so released binaries get
+          # AVX-512 without -march=native (which Nix strips and which mis-targets
+          # cross-host builds).
+          - { name: gcc-release, preset: release-portable, cc: gcc, cxx: g++ }
           - { name: clang-debug-san, preset: debug, cc: clang, cxx: clang++ }
     name: ${{ matrix.name }}
     runs-on: ubuntu-latest
@@ -39,6 +43,15 @@ jobs:
         run: |
           python3 scripts/gen_unicode.py > /tmp/unicode_data.inc
           diff -u src/unicode_data.inc /tmp/unicode_data.inc
+      - name: assert SIMD compiled in (guard the SSE-only trap)
+        if: matrix.name == 'gcc-release'
+        # The AVX-512 ISA variant must actually contain AVX-512 -- catches a
+        # silent regression to a SIMD-less build (e.g. a stripped -march).
+        run: |
+          so=build/release-portable/bin/libggml-cpu-skylakex.so
+          n=$(objdump -d "$so" | grep -c '%zmm')
+          echo "skylakex %zmm instructions: $n"
+          test "$n" -gt 0
 
   # Tier 2 (nightly / dispatch): HF reference fixtures + parity + fuzz smoke.
   # Needs the model checkpoint; cached between runs.
@@ -92,9 +105,9 @@ jobs:
             --model ~/models/privacy-filter-multilingual \
             --outfile ~/ggufs/pf-f32.gguf --outtype f32
       - name: build
-        run: cmake --preset release -DGGML_NATIVE=OFF && cmake --build --preset release -j
+        run: cmake --preset release-portable && cmake --build --preset release-portable -j
       - name: parity suite
-        run: PF_GGUF_DIR=~/ggufs ctest --preset release -L model
+        run: PF_GGUF_DIR=~/ggufs ctest --preset release-portable -L model
       - name: fuzz smoke (5 min/target)
         run: |
           cmake --preset fuzz && cmake --build --preset fuzz -j --target fuzz_tokenizer fuzz_gguf
