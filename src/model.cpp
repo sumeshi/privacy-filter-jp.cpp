@@ -231,6 +231,14 @@ bool model::forward(const int32_t * ids, int64_t n, std::vector<float> & logits,
                              0.0f, attn_factor, h.yarn_beta_fast, h.yarn_beta_slow);
     };
 
+    // Ablation profiling hooks (PF_PROF): skip a block to attribute wall-time.
+    //   noattn  -> skip self-attention; nomoe -> skip the MoE FFN.
+    // The residual still runs on the (cheap rms) input, so the delta vs the full
+    // forward is that block's cost. Build-time only; no effect unset.
+    const char * prof = std::getenv("PF_PROF");
+    const bool prof_noattn = prof && std::strstr(prof, "noattn");
+    const bool prof_nomoe  = prof && std::strstr(prof, "nomoe");
+
     for (int il = 0; il < h.n_layer; il++) {
         const layer_weights & l = layers[il];
         const std::string L = "l" + std::to_string(il);
@@ -239,7 +247,7 @@ bool model::forward(const int32_t * ids, int64_t n, std::vector<float> & logits,
         cur = tap(rms(cur, l.attn_norm), L + ".attn_norm");
 
         // self-attention
-        {
+        if (!prof_noattn) {
             ggml_tensor * q = ggml_add(ctx, ggml_mul_mat(ctx, l.wq, cur), l.bq);  // [896, n]
             ggml_tensor * k = ggml_add(ctx, ggml_mul_mat(ctx, l.wk, cur), l.bk);  // [128, n]
             ggml_tensor * v = ggml_add(ctx, ggml_mul_mat(ctx, l.wv, cur), l.bv);  // [128, n]
@@ -276,7 +284,7 @@ bool model::forward(const int32_t * ids, int64_t n, std::vector<float> & logits,
 
         // MoE FFN (softmax-after-top-k gating; the HF reference's /top_k and
         // *top_k cancel, so plain softmax weights are the trained semantics)
-        {
+        if (!prof_nomoe) {
             const int64_t n_exp = h.n_expert, n_used = h.n_expert_used;
 
             ggml_tensor * rl = ggml_add(ctx, ggml_mul_mat(ctx, l.router_w, cur), l.router_b);  // [128, n]
@@ -327,17 +335,19 @@ bool model::forward(const int32_t * ids, int64_t n, std::vector<float> & logits,
         return false;
     }
 
-    // inputs AFTER alloc
+    // inputs AFTER alloc. Guard each set on ->buffer: a PF_PROF ablation can
+    // prune a block, orphaning its inputs (gallocr leaves them unallocated);
+    // unset, every input is live so this is a no-op.
     ggml_backend_tensor_set(inp_tokens, ids, 0, n * sizeof(int32_t));
     {
         std::vector<int32_t> pos(n);
         for (int64_t i = 0; i < n; i++) pos[i] = (int32_t) i;
-        ggml_backend_tensor_set(inp_pos, pos.data(), 0, n * sizeof(int32_t));
+        if (inp_pos->buffer) ggml_backend_tensor_set(inp_pos, pos.data(), 0, n * sizeof(int32_t));
 
         std::vector<float> mask(n * n);
         fill_swa_mask(mask.data(), n, h.swa_radius);
-        ggml_backend_tensor_set(kq_mask, mask.data(), 0, mask.size() * sizeof(float));
-        ggml_backend_tensor_set(ff, freq_factors.data(), 0, freq_factors.size() * sizeof(float));
+        if (kq_mask->buffer) ggml_backend_tensor_set(kq_mask, mask.data(), 0, mask.size() * sizeof(float));
+        if (ff->buffer)      ggml_backend_tensor_set(ff, freq_factors.data(), 0, freq_factors.size() * sizeof(float));
     }
 
     if (ggml_backend_graph_compute(be.be, gf) != GGML_STATUS_SUCCESS) {
