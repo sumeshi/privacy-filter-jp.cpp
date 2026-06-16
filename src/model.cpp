@@ -239,6 +239,13 @@ bool model::forward(const int32_t * ids, int64_t n, std::vector<float> & logits,
     const bool prof_noattn = prof && std::strstr(prof, "noattn");
     const bool prof_nomoe  = prof && std::strstr(prof, "nomoe");
 
+    // Fused flash attention (default) instead of the explicit [n,n] score matrix:
+    // no materialized scores, the backend skips out-of-band KV under the
+    // sliding-window mask, sinks carried via add_sinks, F32 accumulate. Validated
+    // exact (passes the f32 cos>=0.99999 gate) and ~2-2.4x faster on CPU and
+    // Vulkan at length. PF_NOFLASH selects the explicit path (reference / debug).
+    const bool use_flash = !std::getenv("PF_NOFLASH");
+
     for (int il = 0; il < h.n_layer; il++) {
         const layer_weights & l = layers[il];
         const std::string L = "l" + std::to_string(il);
@@ -261,18 +268,28 @@ bool model::forward(const int32_t * ids, int64_t n, std::vector<float> & logits,
 
             ggml_tensor * qp = ggml_permute(ctx, q, 0, 2, 1, 3);                 // [64, n, 14]
             ggml_tensor * kp = ggml_permute(ctx, k, 0, 2, 1, 3);                 // [64, n,  2]
-            ggml_tensor * vp = ggml_cont(ctx, ggml_permute(ctx, v, 1, 2, 0, 3)); // [n, 64,  2]
 
-            ggml_tensor * kq = ggml_mul_mat(ctx, kp, qp);                        // [n, n, 14] (GQA broadcast)
-            ggml_mul_mat_set_prec(kq, GGML_PREC_F32);
-            kq = ggml_soft_max_ext(ctx, kq, kq_mask, 1.0f / std::sqrt((float) n_rot), 0.0f);
-            ggml_soft_max_add_sinks(kq, l.sinks);
+            const float kq_scale = 1.0f / std::sqrt((float) n_rot);
+            ggml_tensor * attn;                                                  // [896, n]
+            if (use_flash) {
+                ggml_tensor * vp = ggml_cont(ctx, ggml_permute(ctx, v, 0, 2, 1, 3)); // [64, n, 2]
+                ggml_tensor * m16 = ggml_cast(ctx, kq_mask, GGML_TYPE_F16);
+                ggml_tensor * fa = ggml_flash_attn_ext(ctx, qp, kp, vp, m16, kq_scale, 0.0f, 0.0f);
+                ggml_flash_attn_ext_set_prec(fa, GGML_PREC_F32);
+                ggml_flash_attn_ext_add_sinks(fa, l.sinks);
+                attn = ggml_reshape_2d(ctx, fa, n_head * n_rot, n);             // [896, n]
+            } else {
+                ggml_tensor * vp = ggml_cont(ctx, ggml_permute(ctx, v, 1, 2, 0, 3)); // [n, 64, 2]
+                ggml_tensor * kq = ggml_mul_mat(ctx, kp, qp);                        // [n, n, 14] (GQA)
+                ggml_mul_mat_set_prec(kq, GGML_PREC_F32);
+                kq = ggml_soft_max_ext(ctx, kq, kq_mask, kq_scale, 0.0f);
+                ggml_soft_max_add_sinks(kq, l.sinks);
+                ggml_tensor * kqv = ggml_mul_mat(ctx, vp, kq);                       // [64, n, 14]
+                kqv = ggml_permute(ctx, kqv, 0, 2, 1, 3);                            // [64, 14, n]
+                attn = ggml_cont_2d(ctx, kqv, n_head * n_rot, n);                    // [896, n]
+            }
 
-            ggml_tensor * kqv = ggml_mul_mat(ctx, vp, kq);                       // [64, n, 14]
-            kqv = ggml_permute(ctx, kqv, 0, 2, 1, 3);                            // [64, 14, n]
-            kqv = ggml_cont_2d(ctx, kqv, n_head * n_rot, n);                     // [896, n]
-
-            cur = ggml_add(ctx, ggml_mul_mat(ctx, l.wo, kqv), l.bo);             // [640, n]
+            cur = ggml_add(ctx, ggml_mul_mat(ctx, l.wo, attn), l.bo);            // [640, n]
             tap(cur, L + ".attn_out");
         }
 

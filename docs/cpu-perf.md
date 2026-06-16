@@ -75,6 +75,25 @@ precision drop — on the 3k-token case it falls below the f16 parity gate (cos
 0.9972, 1 argmax flip in 3053), so it would need its own tier. Given f16+AVX-512
 already beats the reference, Q8 is optional (e.g. for memory: 1.6 vs 2.8 GiB).
 
+## Flash attention (both backends)
+
+With SIMD fixed, attention became the dominant cost at length on *both* backends
+(`PF_PROF` ablation — CPU 8192 tok: attention 72%; Vulkan 2k–32k: ~69%), because
+the engine built the full `[n,n]` score matrix and masked it to the sliding
+window — O(n²) work for an O(n·256) receptive field.
+
+`ggml_flash_attn_ext` (default; `PF_NOFLASH` selects the explicit path) fuses
+QK·softmax·V with no materialized scores, carries the attention sinks
+(`ggml_flash_attn_ext_add_sinks`) and the sliding-window mask, and accumulates in
+F32. It is numerically exact here — passes the f32 `cos>=0.99999` gate and
+window-stitch — and faster where attention dominates:
+
+| forward tok/s | CPU 2048 | CPU 8192 | Vulkan 8192 | Vulkan 131072 |
+|---|---:|---:|---:|---:|
+| explicit (`PF_NOFLASH`) | 1881 | 798 | 11845 | 8992 |
+| flash (default) | 3319 | 1928 | 26918 | 20631 |
+| speedup | 1.8× | 2.4× | 2.3× | 2.3× |
+
 ## Reproduce
 
 ```sh
