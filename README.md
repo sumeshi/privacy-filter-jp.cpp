@@ -134,32 +134,29 @@ cmake --preset release-portable && cmake --build --preset release-portable -j
 build/release-portable/bin/pf-bench model.gguf [cpu|vulkan] [iters] [lengths]
 ```
 
-`release-portable` builds every ggml-cpu ISA variant and dispatches at runtime, so
-binaries get AVX-512 (etc.) without baking in `-march=native` (which Nix strips).
-The engine runs flash attention by default, and banded block-local sliding-window
-attention for sequences >= 2048 tokens — both parity-exact (`PF_NOFLASH` /
-`PF_BANDED=0` to disable). See [docs/cpu-perf.md](docs/cpu-perf.md).
-
-Forward tok/s vs stock HF Transformers (transformers 5.9, eager attention), Ryzen
-9 7900 (12 threads) + RTX 5070 Ti, f16/fp16, matched token counts
-([scripts/bench_torch.py](scripts/bench_torch.py) for the reference):
+Forward tok/s vs stock HF Transformers (transformers 5.9, eager), Ryzen 9 7900 (12
+threads) + RTX 5070 Ti, f16/fp16, matched token counts
+([scripts/bench_torch.py](scripts/bench_torch.py)):
 
 GPU — ours (Vulkan) vs HF (CUDA):
 
-| tokens |     512 |   2 048 |   8 192 |  32 768 | 131 072 |
-|-------:|--------:|--------:|--------:|--------:|--------:|
-| HF     |   5 526 |  16 427 |  14 154 |     OOM |     OOM |
-| ours   | 100 503 | 145 481 | 105 034 |  83 519 |  81 105 |
+| tokens |      HF |    ours |    × |
+|-------:|--------:|--------:|-----:|
+|    512 |   5 526 | 100 503 |  18× |
+|  2 048 |  16 427 | 145 481 | 8.9× |
+|  8 192 |  14 154 | 105 034 | 7.4× |
+| 32 768 |     OOM |  83 519 |    — |
+| 131072 |     OOM |  81 105 |    — |
 
 CPU — ours vs HF (fp32):
 
-| tokens |   512 | 2 048 | 8 192 |
-|-------:|------:|------:|------:|
-| HF     | 2 171 |   978 |   304 |
-| ours   | 3 564 | 3 490 | 2 332 |
+| tokens |    HF |  ours |    × |
+|-------:|------:|------:|-----:|
+|    512 | 2 171 | 3 564 | 1.6× |
+|  2 048 |   978 | 3 490 | 3.6× |
+|  8 192 |   304 | 2 332 | 7.7× |
 
-Faster on both devices at every length (7–18× on GPU, 1.6–7.7× on CPU), the gap
-widening with length since HF's eager attention is O(n²). Memory is flat — ~2.8
-GiB VRAM / ~3 GiB RAM out to 131k tokens (the windowed compute buffer; weights are
-one zero-copy ~2.8 GiB f16 buffer) — where HF grows O(n²) and OOMs past ~16k tokens
-on a 16 GiB GPU.
+Memory is flat ~2.8 GiB VRAM / ~3 GiB RAM to 131k tokens; HF OOMs past ~16k on a 16
+GiB GPU. `release-portable` runtime-dispatches the best ggml-cpu ISA (AVX-512
+without `-march=native`); flash + banded attention default on. See
+[docs/cpu-perf.md](docs/cpu-perf.md).
