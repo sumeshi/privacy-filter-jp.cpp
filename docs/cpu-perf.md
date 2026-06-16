@@ -129,10 +129,11 @@ n=8192 B=256 r=128 | max|d|=0.00e+00 | mask: full 256.0 MiB, band 24.0 MiB (10.7
 
 Mask scaling (B=256): 21× smaller at 16k, 85× at 64k.
 
-**Integrated** behind `PF_BANDED` (`src/model.cpp`): blocks of B=256, each query
-block flash-attends to blocks `{i-1,i,i+1}` with the F16 band mask + sinks; GQA
-broadcasts over heads; out-of-range tokens are padded and masked. Parity-exact —
-passes the f32 `cos>=0.99999` gate and window-stitch on CPU and Vulkan. Speedups
+**On by default for sequences >= 2048 tokens** (`src/model.cpp`; `PF_BANDED`
+forces it on/off): blocks of B=256, each query block flash-attends to blocks
+`{i-1,i,i+1}` with the F16 band mask + sinks; GQA broadcasts over heads;
+out-of-range tokens are padded and masked. Parity-exact — passes the f32
+`cos>=0.99999` gate and window-stitch on CPU and Vulkan. Speedups
 (flash → banded, default W):
 
 | tok/s | CPU 8192 | Vulkan 8192 | Vulkan 32768 |
@@ -142,16 +143,17 @@ passes the f32 `cos>=0.99999` gate and window-stitch on CPU and Vulkan. Speedups
 | | 1.1× | **2.5×** | **2.5×** |
 
 Big on Vulkan (the flash kernel computes the full window; banded only the band),
-modest on CPU, a slight loss at very short inputs (B=256 padding overhead) -- so
-it stays opt-in for now.
+modest on CPU. The measured crossover (banded/flash): 0.9× at 256–512 tok, 1.0×
+at 2048, then 1.1× (CPU) / 2.5× (Vulkan) at 4096+. Hence the 2048 default cutoff.
 
 ### Dropping the window (`PF_MOE_CHUNK`)
 
 With banded attention the only remaining O(n) cap on a large single window was the
 MoE expert matmul's activation scratch (`mul_mat_id y_sz > maxStorageBufferRange`
 on Vulkan). The MoE is per-token, so `PF_MOE_CHUNK=C` runs it in C-token chunks
-(exact, no halo). Banded + chunking lets a **131072-token document run in one
-window** instead of windowing at W=4096:
+(exact, no halo). It defaults to the forward window (4096), so it's inert at the
+default window (n <= W) but keeps a *larger* window from OOMing. Banded + chunking
+lets a **131072-token document run in one window** instead of windowing at W=4096:
 
 | 131072 tok, Vulkan | tok/s | compute buffer |
 |---|---:|---:|

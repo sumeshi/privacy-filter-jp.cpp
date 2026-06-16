@@ -178,11 +178,12 @@ bool model::forward(const int32_t * ids, int64_t n, std::vector<float> & logits,
     const hparams & h = file.hp;
     const int64_t n_embd = h.n_embd, n_head = h.n_head, n_head_kv = h.n_head_kv, n_rot = h.n_rot;
 
-    // PF_MOE_CHUNK: process the MoE FFN in token-chunks of this size. The MoE is
-    // per-token, so this is exact (no halo) and bounds the mul_mat_id activation
-    // scratch -- the remaining O(n) cap on large single windows (banded attention
-    // removed the O(n^2) one). 0 = one shot over all n.
-    const int     moe_chunk = std::getenv("PF_MOE_CHUNK") ? std::atoi(std::getenv("PF_MOE_CHUNK")) : 0;
+    // PF_MOE_CHUNK: MoE FFN token-chunk size. The MoE is per-token, so chunking is
+    // exact (no halo) and bounds the mul_mat_id activation scratch (a Vulkan
+    // single-buffer limit). Default = the forward window, so it is inert at the
+    // default window (n <= W) yet keeps a larger window (single-pass long docs)
+    // from OOMing. 0 disables.
+    const int     moe_chunk = std::getenv("PF_MOE_CHUNK") ? std::atoi(std::getenv("PF_MOE_CHUNK")) : 4096;
 
     // ~45 nodes/layer * 8 layers + inputs/head; generous fixed bound. MoE chunking
     // multiplies the FFN node count by the number of chunks.
@@ -219,7 +220,12 @@ bool model::forward(const int32_t * ids, int64_t n, std::vector<float> & logits,
     // attention compute drops to O(n*band). Tokens group into blocks of B>=radius;
     // each query block attends only to blocks {i-1,i,i+1}. Bit-identical to the
     // full masked attention (see bench/banded_attn_proto.cpp).
-    const bool use_banded = std::getenv("PF_BANDED");
+    // Default on once the sequence is long enough to win. The B=256 block padding
+    // makes it a slight loss on short inputs; measured crossover ~2048 tok (CPU
+    // neutral-to-faster, Vulkan ~1.1x rising to ~2.5x at length). PF_BANDED forces
+    // it on (non-zero) or off (0). n here is one window's worth (<= the window).
+    const char * banded_env = std::getenv("PF_BANDED");
+    const bool use_banded = banded_env ? (std::atoi(banded_env) != 0) : (n >= 2048);
     const int  Bsz   = 256;                          // block size (>= swa_radius 128)
     const int  nbk   = use_banded ? (int) ((n + Bsz - 1) / Bsz) : 0;
     const int  n_pad = nbk * Bsz;
