@@ -36,7 +36,9 @@ jobs:
         run: cmake --preset ${{ matrix.preset }} -DGGML_NATIVE=OFF
         env: { CC: '${{ matrix.cc }}', CXX: '${{ matrix.cxx }}' }
       - name: build
-        run: cmake --build --preset ${{ matrix.preset }} -j
+        # -j4 (not unbounded -j): release-portable compiles 14 ggml-cpu ISA
+        # variants; uncapped parallelism OOMs the 16 GB runner.
+        run: cmake --build --preset ${{ matrix.preset }} -j4
       - name: test (model-independent)
         run: ctest --preset ${{ matrix.preset }} -LE model
       - name: unicode table regen check
@@ -105,7 +107,7 @@ jobs:
             --model ~/models/privacy-filter-multilingual \
             --outfile ~/ggufs/pf-f32.gguf --outtype f32
       - name: build
-        run: cmake --preset release-portable && cmake --build --preset release-portable -j
+        run: cmake --preset release-portable && cmake --build --preset release-portable -j4
       - name: parity suite
         run: PF_GGUF_DIR=~/ggufs ctest --preset release-portable -L model
       - name: fuzz smoke (5 min/target)
