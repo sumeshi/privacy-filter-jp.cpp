@@ -30,6 +30,16 @@ hits the 16 GiB memory wall and OOMs at ~16k.
 
 Full-quality MP4s: [CPU](demo/out/pii_duel_cpu_final.mp4) · [GPU](demo/out/pii_duel_gpu_final.mp4).
 
+**Raspberry Pi 5 — on-device, real time.** The same engine, no GPU: 1,360 tokens
+of mixed PII classified in 3.8 s (360 tok/s) on a Cortex-A76 @ 1.5 GHz with q8
+weights. The right pane is the live NER feed — 107 spans across 22 categories,
+each with its category and byte range (q8 output is span-for-span identical to
+f16 here).
+
+![Raspberry Pi 5 on-device PII scan: 1,360 tokens, 107 PII spans across 22 categories in 3.8 s](demo/out/pii_scan.gif)
+
+Full-quality MP4: [Pi 5 scan](demo/out/pii_scan_final.mp4).
+
 Single forward-pass latency and throughput vs stock HF Transformers (transformers
 5.9, eager), Ryzen 9 7900 (12 threads) + RTX 5070 Ti, f16/fp16, matched token
 counts ([scripts/bench_torch.py](scripts/bench_torch.py)). `tokens` is the input
