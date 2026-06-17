@@ -50,8 +50,13 @@ def main() -> int:
     ap.add_argument("--attn", default="sdpa", choices=["sdpa", "eager"])
     ap.add_argument("--lengths", default="189,756,2898,11403,45234",
                     help="comma-separated token counts (match pf-bench output)")
-    ap.add_argument("--iters", type=int, default=3)
+    ap.add_argument("--iters", type=int, default=10)
+    ap.add_argument("--warmup", type=int, default=5,
+                    help="untimed warm-up iters (small/fast lengths need several)")
     ap.add_argument("--threads", type=int, default=0, help="CPU threads (0 = torch default)")
+    ap.add_argument("--compile", action="store_true", help="wrap the model in torch.compile")
+    ap.add_argument("--compile-mode", default="default",
+                    choices=["default", "reduce-overhead", "max-autotune"])
     args = ap.parse_args()
 
     import torch
@@ -72,6 +77,8 @@ def main() -> int:
     t_load0 = time.perf_counter()
     model = AutoModelForTokenClassification.from_pretrained(
         args.model, dtype=dtype, attn_implementation=args.attn).eval().to(dev)
+    if args.compile:
+        model = torch.compile(model, mode=args.compile_mode)
     if cuda:
         torch.cuda.synchronize()
     t_load1 = time.perf_counter()
@@ -81,8 +88,9 @@ def main() -> int:
             model(input_ids=ids)
 
     name = torch.cuda.get_device_name(dev) if cuda else f"cpu x{torch.get_num_threads()}"
+    comp = f"compile:{args.compile_mode}" if args.compile else "eager-run"
     print(f"torch {torch.__version__} | tf {transformers.__version__} | {name} | "
-          f"{dtype_name} | {args.attn} | load {t_load1 - t_load0:.2f}s | {args.iters} iters\n")
+          f"{dtype_name} | {args.attn} | {comp} | load {t_load1 - t_load0:.2f}s | {args.iters} iters\n")
     print(f"| {'tokens':>8} | {'forward ms':>11} | {'tok/s':>8} | {'peak MiB':>8} |")
     print("|---------:|------------:|---------:|---------:|")
 
@@ -92,7 +100,8 @@ def main() -> int:
             if cuda:
                 torch.cuda.reset_peak_memory_stats(dev)
                 torch.cuda.synchronize()
-            fwd(ids)  # warm-up (lazy kernel/autotune, allocator growth)
+            for _ in range(args.warmup):    # warm-up: compile, cuBLAS algo pick,
+                fwd(ids)                    # workspace alloc, allocator growth
             if cuda:
                 torch.cuda.synchronize()
                 ev0, ev1 = torch.cuda.Event(enable_timing=True), torch.cuda.Event(enable_timing=True)
