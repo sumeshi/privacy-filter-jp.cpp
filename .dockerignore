@@ -1,0 +1,14 @@
+# Keep the docker build context small: ship source + the vendored ggml submodule,
+# not host build trees, model blobs, or demo media.
+build/
+**/build/
+.git/
+.cache/
+demo/out/
+demo/traces/
+*.gguf
+*.mp4
+*.gif
+*.webm
+.venv/
+__pycache__/

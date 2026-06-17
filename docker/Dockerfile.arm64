@@ -1,0 +1,36 @@
+# Cross-build privacy-filter.cpp for arm64 (aarch64) via docker buildx + qemu.
+#
+#   docker buildx build --platform linux/arm64 -f docker/Dockerfile.arm64 \
+#       --target export --output type=local,dest=build/arm64 .
+#
+# The build runs under qemu user emulation (slow but reproducible). The base is
+# ubuntu:24.04 so the toolchain (gcc 13.3, glibc 2.39) and resulting ABI match a
+# Raspberry Pi 5 running Ubuntu 24.04 -- the binaries drop straight onto the Pi.
+#
+# By default it targets the Pi 5's Cortex-A76 (armv8.2-a + dotprod + fp16), which
+# is what ggml's quantized kernels exploit. Override --build-arg GGML_CPU_ARM_ARCH
+# for a different chip, or set it to a baseline like "armv8-a" for a portable
+# (slower) binary.
+ARG UBUNTU=24.04
+
+FROM ubuntu:${UBUNTU} AS build
+ARG GGML_CPU_ARM_ARCH=armv8.2-a+dotprod+fp16
+ARG JOBS=4
+RUN apt-get update && apt-get install -y --no-install-recommends \
+        build-essential cmake git ca-certificates \
+    && rm -rf /var/lib/apt/lists/*
+WORKDIR /src
+COPY . .
+RUN cmake -S . -B build/arm64 \
+        -DCMAKE_BUILD_TYPE=Release \
+        -DGGML_NATIVE=OFF \
+        -DGGML_CPU_ARM_ARCH=${GGML_CPU_ARM_ARCH} \
+        -DBUILD_SHARED_LIBS=OFF \
+        -DPF_BUILD_TESTS=OFF \
+    && cmake --build build/arm64 -j${JOBS} --target pf-cli pf-bench
+
+# Thin export stage: `--output type=local` against this target writes just the
+# two binaries to the host (no image layers, no apt cruft).
+FROM scratch AS export
+COPY --from=build /src/build/arm64/pf-cli  /
+COPY --from=build /src/build/arm64/pf-bench /
