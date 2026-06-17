@@ -7,6 +7,7 @@
 #include <cctype>
 #include <cstdlib>
 #include <cstring>
+#include <fstream>
 #include <thread>
 
 namespace pf {
@@ -16,6 +17,20 @@ namespace {
 std::string lower(std::string s) {
     for (char & c : s) c = (char) std::tolower((unsigned char) c);
     return s;
+}
+
+// Default CPU threads = physical cores. SMT siblings only add contention for
+// matmul-heavy work, so on x86 (logical == 2x physical) we halve -- but ONLY
+// when SMT is actually on. ARM / Apple silicon have no SMT, where a blanket /2
+// silently throws away half the cores.
+unsigned default_cpu_threads() {
+    unsigned logical = std::max(1u, std::thread::hardware_concurrency());
+    std::ifstream smt("/sys/devices/system/cpu/smt/active");
+    int on = 0;
+    if (smt >> on && on == 1) {
+        return std::max(1u, logical / 2);
+    }
+    return logical;
 }
 
 // "cuda:1" -> ("cuda", 1); "vulkan" -> ("vulkan", 0); "" -> ("", 0).
@@ -67,9 +82,7 @@ bool engine_backend::init(const std::string & device_req, int n_threads) {
             if (int v = std::atoi(env)) n_threads = v;
         }
         if (n_threads <= 0) {
-            // ggml's default is 4 threads; matmul-heavy work wants the
-            // physical cores (SMT siblings only add contention here)
-            n_threads = std::max(1u, std::thread::hardware_concurrency() / 2);
+            n_threads = (int) default_cpu_threads();
         }
         set_cpu_threads(be, n_threads);
     } else if (name == "gpu" || name == "cuda" || name == "vulkan") {
