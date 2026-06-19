@@ -3,14 +3,16 @@
 Minimal [GGML](https://github.com/ggml-org/ggml) inference engine for the
 `openai-privacy-filter` token-classification model family
 ([openai/privacy-filter](https://huggingface.co/openai/privacy-filter),
-[OpenMed/privacy-filter-multilingual](https://huggingface.co/OpenMed/privacy-filter-multilingual)):
+[OpenMed/privacy-filter-multilingual](https://huggingface.co/OpenMed/privacy-filter-multilingual),
+[OpenMed/privacy-filter-nemotron](https://huggingface.co/OpenMed/privacy-filter-nemotron)):
 PII/NER entity spans with exact UTF-8 byte offsets. Stock upstream ggml — no
 patches; the model's YaRN `truncate=false` frequencies are computed at load
 time and fed to `ggml_rope_ext` as `freq_factors`.
 
 Pre-converted GGUFs (arch `openai-privacy-filter`):
-[`LocalAI-io/privacy-filter-multilingual-GGUF`](https://huggingface.co/LocalAI-io/privacy-filter-multilingual-GGUF)
-and [`LocalAI-io/privacy-filter-GGUF`](https://huggingface.co/LocalAI-io/privacy-filter-GGUF).
+[`LocalAI-io/privacy-filter-multilingual-GGUF`](https://huggingface.co/LocalAI-io/privacy-filter-multilingual-GGUF),
+[`LocalAI-io/privacy-filter-GGUF`](https://huggingface.co/LocalAI-io/privacy-filter-GGUF),
+and [`LocalAI-io/privacy-filter-nemotron-GGUF`](https://huggingface.co/LocalAI-io/privacy-filter-nemotron-GGUF).
 Convert your own from a HF checkpoint with
 [`scripts/convert.py`](scripts/convert.py) — self-contained, no llama.cpp
 dependency (see [Convert](#convert)).
