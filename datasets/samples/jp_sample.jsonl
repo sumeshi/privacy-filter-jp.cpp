@@ -1,0 +1,16 @@
+{"text": "山田太郎さんの住所は東京都千代田区丸の内1丁目99番99号です。", "spans": [{"start": 0, "end": 4, "label": "private_person"}, {"start": 10, "end": 29, "label": "private_address"}]}
+{"text": "配送先：〒160-0022 東京都新宿区新宿3-99-88 サンプルマンション101号室", "spans": [{"start": 4, "end": 44, "label": "private_address"}]}
+{"text": "契約者名：佐藤 花子", "spans": [{"start": 5, "end": 10, "label": "private_person"}]}
+{"text": "営業部の鈴木　一郎様に確認してください。", "spans": [{"start": 4, "end": 9, "label": "private_person"}]}
+{"text": "株式会社テスト 山田様宛に送付します。", "spans": [{"start": 8, "end": 10, "label": "private_person"}]}
+{"text": "請求先住所は大阪府大阪市北区梅田3丁目99番1号 テストビル5Fです。", "spans": [{"start": 6, "end": 32, "label": "private_address"}]}
+{"text": "メールはhanako.sato@example.invalidへお願いします。", "spans": [{"start": 4, "end": 31, "label": "private_email"}]}
+{"text": "携帯番号：090-0000-0000", "spans": [{"start": 5, "end": 18, "label": "private_phone"}]}
+{"text": "予約日：2025/03/10", "spans": [{"start": 4, "end": 14, "label": "private_date"}]}
+{"text": "契約番号：CNTR-2025-0001", "spans": [{"start": 5, "end": 19, "label": "account_number"}]}
+{"text": "確認URLはhttps://example.invalid/orders/test-001です。", "spans": [{"start": 6, "end": 45, "label": "private_url"}]}
+{"text": "APIキー：sk-test-0000000000000000", "spans": [{"start": 6, "end": 30, "label": "secret"}]}
+{"text": "お届け先は〒604-8127 京都府京都市中京区錦小路通堺町東入599 テストビル5F、宛名は山田　太郎様です。", "spans": [{"start": 5, "end": 43, "label": "private_address"}, {"start": 47, "end": 52, "label": "private_person"}]}
+{"text": "株式会社サンプル 営業部 部長 佐藤花子様", "spans": [{"start": 16, "end": 20, "label": "private_person"}]}
+{"text": "住所：大阪市北区梅田3-99-1 グランドテストタワー1201号室", "spans": [{"start": 3, "end": 33, "label": "private_address"}]}
+{"text": "請求先住所は東京都渋谷区渋谷1丁目99番3号 テストビル5Fです。担当は高橋です。", "spans": [{"start": 6, "end": 30, "label": "private_address"}, {"start": 36, "end": 38, "label": "private_person"}]}

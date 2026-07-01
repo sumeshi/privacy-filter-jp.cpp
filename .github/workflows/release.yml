@@ -1,0 +1,59 @@
+name: release
+
+# Build the CPU CLI (pf-cli) for Linux and attach the archive to the GitHub
+# release. Users then only need to download the archive + the GGUF model from
+# Hugging Face to run it -- no toolchain, no build.
+on:
+  release:
+    types: [published]
+  workflow_dispatch:   # manual test build; uploads as an Actions artifact only
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    name: linux-x86_64
+    runs-on: ubuntu-latest
+    env:
+      NAME: privacy-filter-jp-cli-linux-x86_64
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      # release-portable = every ggml-cpu ISA variant, runtime-dispatched, no
+      # -march=native. One archive runs on any x86-64 host yet still uses
+      # AVX-512/VNNI where present. CPU only (GPU builds need the CUDA/Vulkan
+      # runtime on the user's machine, so they are not shipped prebuilt).
+      - name: configure
+        run: cmake --preset release-portable -DPF_BUILD_TESTS=OFF
+
+      # No --target: the ggml-cpu ISA variant libraries are dlopen()d at run
+      # time (GGML_BACKEND_DL), not linked, so building only pf-cli would omit
+      # them. Build all, then package just pf-cli + the ggml libs below.
+      - name: build
+        run: cmake --build build/release-portable --config Release --parallel 4
+
+      - name: stage archive
+        run: |
+          mkdir -p "$NAME"
+          # pf-cli plus the ggml runtime libraries it dlopen()s at run time.
+          find build/release-portable -type f -name 'pf-cli' -exec cp {} "$NAME/" \;
+          find build/release-portable -type f \( -name '*.so' -o -name '*.so.*' \) -exec cp {} "$NAME/" \;
+          cp README.md LICENSE "$NAME/"
+          ls -la "$NAME"
+          tar czf "$NAME.tar.gz" "$NAME"
+
+      - name: upload to release
+        if: github.event_name == 'release'
+        uses: softprops/action-gh-release@v2
+        with:
+          files: ${{ env.NAME }}.tar.gz
+
+      - name: upload as artifact (manual build)
+        if: github.event_name == 'workflow_dispatch'
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ env.NAME }}
+          path: ${{ env.NAME }}.tar.gz

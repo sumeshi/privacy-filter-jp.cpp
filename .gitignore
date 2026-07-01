@@ -7,3 +7,10 @@ corpus_*/
 crash-*
 perf.data*
 tests/fixtures/hf/
+datasets/generated/
+runs/
+
+# AI coding agent tooling (local-only, not part of the project)
+.serena/
+AGENTS.md
+.tokensave/

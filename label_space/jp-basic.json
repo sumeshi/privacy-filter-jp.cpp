@@ -1,0 +1,46 @@
+{
+  "name": "jp-basic",
+  "description": "Normalized PII labels for privacy-filter-jp.cpp. Keep the original English privacy-filter categories and strengthen Japanese person/address coverage.",
+  "labels": [
+    {
+      "name": "private_person",
+      "redaction": "[PERSON]",
+      "description": "個人名。日本語氏名、敬称付き氏名、役職付き氏名、会社名・部署名と並ぶ個人名を含む"
+    },
+    {
+      "name": "private_address",
+      "redaction": "[ADDRESS]",
+      "description": "住所。日本語住所、郵便番号付き住所、建物名、部屋番号など"
+    },
+    {
+      "name": "private_email",
+      "redaction": "[EMAIL]",
+      "description": "メールアドレス。元の privacy-filter で検知できる能力を維持する"
+    },
+    {
+      "name": "private_phone",
+      "redaction": "[PHONE]",
+      "description": "電話番号。元の privacy-filter で検知できる能力を維持する"
+    },
+    {
+      "name": "private_date",
+      "redaction": "[DATE]",
+      "description": "生年月日、予約日、申込日など、個人情報に紐づく日付"
+    },
+    {
+      "name": "account_number",
+      "redaction": "[ACCOUNT]",
+      "description": "顧客番号、契約番号、申込番号、受付番号、口座番号などの識別番号"
+    },
+    {
+      "name": "private_url",
+      "redaction": "[URL]",
+      "description": "個人情報に紐づき得る URL。元の privacy-filter で検知できる能力を維持する"
+    },
+    {
+      "name": "secret",
+      "redaction": "[SECRET]",
+      "description": "API key、Bearer token、password などの secret。元の privacy-filter で検知できる能力を維持する"
+    }
+  ]
+}

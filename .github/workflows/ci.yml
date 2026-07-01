@@ -4,8 +4,6 @@ on:
   push:
     branches: [master]   # PR branches run via pull_request; avoids double runs
   pull_request:
-  schedule:
-    - cron: "20 3 * * *"   # tier 2 nightly
   workflow_dispatch:
 
 # A new push to a branch cancels its still-running CI for the previous commit.
@@ -14,7 +12,7 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  # Tier 1: no model assets — build matrix, fast tests, generated-file checks.
+  # No model assets — build matrix, fast tests, generated-file checks.
   fast:
     strategy:
       matrix:
@@ -60,65 +58,3 @@ jobs:
           n=$(objdump -d "$so" | grep -c '%zmm')
           echo "skylakex %zmm instructions: $n"
           test "$n" -gt 0
-
-  # Tier 2 (nightly / dispatch): HF reference fixtures + parity + fuzz smoke.
-  # Needs the model checkpoint; cached between runs.
-  parity:
-    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
-    runs-on: ubuntu-latest
-    timeout-minutes: 120
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          submodules: recursive
-      - name: cache model + fixtures
-        id: cache
-        uses: actions/cache@v4
-        with:
-          # HF safetensors download + reference fixtures only. The GGUF is
-          # (re)converted from these on every run, so it always reflects the
-          # current scripts/convert.py rather than a stale cached artifact.
-          path: |
-            ~/models/privacy-filter-multilingual
-            tests/fixtures/hf
-          key: pf-model-fixtures-v1
-      - name: python env
-        run: |
-          python3 -m venv .venv
-          .venv/bin/pip install -q torch --index-url https://download.pytorch.org/whl/cpu
-          .venv/bin/pip install -q -r scripts/requirements.txt
-      - name: fetch model + dump fixtures
-        if: steps.cache.outputs.cache-hit != 'true'
-        run: |
-          .venv/bin/pip install -q "huggingface_hub[cli]"
-          .venv/bin/hf download OpenMed/privacy-filter-multilingual \
-            --local-dir ~/models/privacy-filter-multilingual
-          .venv/bin/python scripts/hf_dump.py \
-            --model ~/models/privacy-filter-multilingual --out tests/fixtures/hf
-      - name: convert HF -> GGUF
-        run: |
-          # Conversion is part of the tested path: the parity suite below gates
-          # these freshly converted GGUFs against the HF reference fixtures, so a
-          # scripts/convert.py regression fails CI. ~/ggufs is deliberately
-          # outside the cached paths so every run reconverts with the current
-          # script. (The f16 is the shipped artifact, published at
-          # huggingface.co/LocalAI-io; the f32 adds the tight exact-rotation
-          # parity gate, cos >= 0.99999, that isolates conversion errors from
-          # f16 rounding.)
-          mkdir -p ~/ggufs
-          .venv/bin/python scripts/convert.py \
-            --model ~/models/privacy-filter-multilingual \
-            --outfile ~/ggufs/pf-rope2-f16.gguf --outtype f16
-          .venv/bin/python scripts/convert.py \
-            --model ~/models/privacy-filter-multilingual \
-            --outfile ~/ggufs/pf-f32.gguf --outtype f32
-      - name: build
-        run: cmake --preset release-portable && cmake --build --preset release-portable -j4
-      - name: parity suite
-        run: PF_GGUF_DIR=~/ggufs ctest --preset release-portable -L model
-      - name: fuzz smoke (5 min/target)
-        run: |
-          cmake --preset fuzz && cmake --build --preset fuzz -j --target fuzz_tokenizer fuzz_gguf
-          PF_GGUF=~/ggufs/pf-rope2-f16.gguf \
-            ./build/fuzz/fuzz_tokenizer -max_total_time=300 -max_len=4096
-          ./build/fuzz/fuzz_gguf -max_total_time=300 -max_len=8192

@@ -1,0 +1,20 @@
+{"text": "お届け先は〒604-8127 京都府京都市中京区錦小路通堺町東入599 テストビル5F、宛名は山田　太郎様です。", "spans": [{"start": 5, "end": 43, "label": "private_address"}, {"start": 47, "end": 52, "label": "private_person"}]}
+{"text": "株式会社サンプル 営業部 部長 佐藤花子様", "spans": [{"start": 16, "end": 20, "label": "private_person"}]}
+{"text": "住所：大阪市北区梅田3-99-1 グランドテストタワー1201号室", "spans": [{"start": 3, "end": 33, "label": "private_address"}]}
+{"text": "請求先住所は東京都渋谷区渋谷1丁目99番3号 テストビル5Fです。担当は高橋です。", "spans": [{"start": 6, "end": 30, "label": "private_address"}, {"start": 36, "end": 38, "label": "private_person"}]}
+{"text": "田中部長様", "spans": [{"start": 0, "end": 2, "label": "private_person"}]}
+{"text": "株式会社テストの山田様と開発部の鈴木一郎さんが対応します。", "spans": [{"start": 8, "end": 10, "label": "private_person"}, {"start": 16, "end": 20, "label": "private_person"}]}
+{"text": "契約者名：佐藤 花子　配送先：〒060-0001 北海道札幌市中央区北1条西2丁目99番 テスト荘101号室", "spans": [{"start": 5, "end": 10, "label": "private_person"}, {"start": 15, "end": 54, "label": "private_address"}]}
+{"text": "お問い合わせ本文：先日申し込んだ斎藤　一郎です。住所は福岡県福岡市博多区博多駅前1-99-9です。", "spans": [{"start": 16, "end": 21, "label": "private_person"}, {"start": 27, "end": 46, "label": "private_address"}]}
+{"text": "東京都内の営業部からのお知らせです。", "spans": []}
+{"text": "サンプル株式会社 代表取締役社長 山本健一", "spans": [{"start": 17, "end": 21, "label": "private_person"}]}
+{"text": "京都府京都市東山区大和大路通四条下る小松町599-2", "spans": [{"start": 0, "end": 26, "label": "private_address"}]}
+{"text": "予約者：中村彩様／ご住所：神奈川県横浜市港北区新横浜2丁目99番1号 サンプルレジデンス7F", "spans": [{"start": 4, "end": 7, "label": "private_person"}, {"start": 13, "end": 46, "label": "private_address"}]}
+{"text": "請求先住所：〒450-0002 愛知県名古屋市中村区名駅1丁目99番99号", "spans": [{"start": 6, "end": 37, "label": "private_address"}]}
+{"text": "経理課長の小林様へ確認してください。", "spans": [{"start": 5, "end": 7, "label": "private_person"}]}
+{"text": "住所変更前：東京都目黒区中根1-2-3　住所変更後：東京都目黒区中根1-99-99", "spans": [{"start": 6, "end": 19, "label": "private_address"}, {"start": 26, "end": 41, "label": "private_address"}]}
+{"text": "会社名：株式会社テスト　担当部署：営業部　担当者名：伊藤美咲", "spans": [{"start": 26, "end": 30, "label": "private_person"}]}
+{"text": "担当のメールはyumi.kobayashi@example.invalid、電話は050-0000-0000です。", "spans": [{"start": 7, "end": 37, "label": "private_email"}, {"start": 41, "end": 54, "label": "private_phone"}]}
+{"text": "申込日：令和6年4月1日　受付番号：R20260401-0001", "spans": [{"start": 4, "end": 12, "label": "private_date"}, {"start": 18, "end": 32, "label": "account_number"}]}
+{"text": "本人確認URL：https://example.invalid/verify/user-0001?token=test", "spans": [{"start": 8, "end": 59, "label": "private_url"}]}
+{"text": "環境変数にPRIVATE_API_KEY=pk_test_000000000000を保存しないでください。", "spans": [{"start": 21, "end": 41, "label": "secret"}]}

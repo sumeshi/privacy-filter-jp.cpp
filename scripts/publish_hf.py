@@ -58,6 +58,12 @@ MODELS: dict[str, tuple[str, dict[str, str], str]] = {
          "q8":  "privacy-filter-q8.gguf"},
         "privacy-filter.md",
     ),
+    "privacy-filter-jp": (
+        f"{HF_ORG}/privacy-filter-jp-GGUF",
+        {"f16": "privacy-filter-jp-f16.gguf",
+         "q8":  "privacy-filter-jp-q8.gguf"},
+        "privacy-filter-jp.md",
+    ),
     "privacy-filter-nemotron": (
         f"{HF_ORG}/privacy-filter-nemotron-GGUF",
         {"f16": "privacy-filter-nemotron-f16.gguf",

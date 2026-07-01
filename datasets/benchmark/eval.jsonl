@@ -1,0 +1,18 @@
+{"text": "申込者氏名 山田　太郎", "spans": [{"start": 6, "end": 11, "label": "private_person"}]}
+{"text": "住所：〒100-0001 東京都千代田区千代田1-99-88", "spans": [{"start": 3, "end": 30, "label": "private_address"}]}
+{"text": "経理部 小林由美様から請求先住所の連絡です。請求先住所：福岡県福岡市博多区博多駅中央街9-99", "spans": [{"start": 4, "end": 8, "label": "private_person"}, {"start": 28, "end": 47, "label": "private_address"}]}
+{"text": "佐藤さんの配送先は愛知県名古屋市中区栄3丁目99番15号です。", "spans": [{"start": 0, "end": 2, "label": "private_person"}, {"start": 9, "end": 28, "label": "private_address"}]}
+{"text": "株式会社テストの中村彩様", "spans": [{"start": 8, "end": 11, "label": "private_person"}]}
+{"text": "契約者は伊藤美咲、送付先は宮城県仙台市青葉区一番町1-99-9 サンプルハイツ202号室です。", "spans": [{"start": 4, "end": 8, "label": "private_person"}, {"start": 13, "end": 44, "label": "private_address"}]}
+{"text": "京都府京都市下京区烏丸通七条下る東塩小路町999 テストレジデンス3F", "spans": [{"start": 0, "end": 35, "label": "private_address"}]}
+{"text": "担当者は渡辺健太郎です。", "spans": [{"start": 4, "end": 9, "label": "private_person"}]}
+{"text": "メールはhanako.sato@example.invalidへお願いします。", "spans": [{"start": 4, "end": 31, "label": "private_email"}]}
+{"text": "携帯番号：090-0000-0000", "spans": [{"start": 5, "end": 18, "label": "private_phone"}]}
+{"text": "予約日：2025/03/10", "spans": [{"start": 4, "end": 14, "label": "private_date"}]}
+{"text": "契約番号：CNTR-2025-0001", "spans": [{"start": 5, "end": 19, "label": "account_number"}]}
+{"text": "確認URLはhttps://example.invalid/orders/test-001です。", "spans": [{"start": 6, "end": 45, "label": "private_url"}]}
+{"text": "APIキー：sk-test-0000000000000000", "spans": [{"start": 6, "end": 30, "label": "secret"}]}
+{"text": "受付番号は公開サンプルです。", "spans": []}
+{"text": "配送先住所は品川区大崎1-99-88 サンプルコーポ303号室です。", "spans": [{"start": 6, "end": 31, "label": "private_address"}]}
+{"text": "田中課長宛に書類を送ってください。", "spans": [{"start": 0, "end": 2, "label": "private_person"}]}
+{"text": "総務部の斎藤一郎より返信します。", "spans": [{"start": 4, "end": 8, "label": "private_person"}]}
