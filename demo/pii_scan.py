@@ -48,6 +48,12 @@ CAT = {
     "IBAN": "#56b6c2", "AMOUNT": "#56b6c2", "PIN": "#5fc9d6", "SSN": "#4fb0bd",
     "CVV": "#4fb0bd", "CREDITCARDNUMBER": "#56b6c2", "ACCOUNTNUMBER": "#56b6c2",
     "PASSWORD": "#e3b341", "VRM": "#e3b341", "HEIGHT": "#cbb05a", "BIC": "#56b6c2",
+    # privacy-filter-jp normalized labels (and the BANKACCOUNT alias), coloured
+    # to match their kind group above.
+    "private_person": "#e0709a", "private_address": "#98c379",
+    "private_date": "#9d7cd8", "private_email": "#7aa2f7",
+    "private_phone": "#e0a458", "private_url": "#7aa2f7",
+    "account_number": "#56b6c2", "BANKACCOUNT": "#56b6c2", "secret": "#e3b341",
 }
 DEFAULT_CAT = "#9aa4af"
 
@@ -255,7 +261,7 @@ def main():
     ap = argparse.ArgumentParser()
     here = Path(__file__).resolve().parent
     ap.add_argument("--scene", default=str(here / "traces/scan"))
-    ap.add_argument("--link", default="github.com/richiejp/privacy-filter.cpp")
+    ap.add_argument("--link", default="github.com/sumeshi/privacy-filter-jp.cpp")
     ap.add_argument("--fps", type=int, default=30)
     ap.add_argument("--dilate", type=float, default=1.0, help="time scale (1 = real time)")
     ap.add_argument("--hold", type=float, default=1.4)

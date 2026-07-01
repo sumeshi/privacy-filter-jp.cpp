@@ -50,7 +50,14 @@ def main():
     n_tok = token_count(a.cli, a.ld, a.model, doc_bytes)
     r = run_cli(a.cli, a.ld, ["--classify", a.model, a.threshold, "cpu"], stdin=doc_bytes)
     ents_raw = json.loads(r.stdout)
-    ents = [{"type": e["entity_group"], "start": e["start"], "end": e["end"],
+
+    # pf-cli returns UTF-8 *byte* offsets; pii_scan.py indexes the document as a
+    # Python str (char offsets). Convert so masking aligns on multibyte text
+    # (Japanese). For ASCII this is the identity.
+    def b2c(bo):
+        return len(doc_bytes[:bo].decode("utf-8", errors="ignore"))
+
+    ents = [{"type": e["entity_group"], "start": b2c(e["start"]), "end": b2c(e["end"]),
              "text": e.get("text", ""), "score": e.get("score", 0.0)} for e in ents_raw]
 
     d = Path(a.scene); d.mkdir(parents=True, exist_ok=True)
