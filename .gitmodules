@@ -1,3 +1,6 @@
 [submodule "ggml"]
 	path = ggml
 	url = https://github.com/ggml-org/ggml
+[submodule "datasets/jp-data"]
+	path = datasets/jp-data
+	url = git@github.com:sumeshi/privacy-filter-jp-datasets.git

@@ -1,5 +1,7 @@
 build*/
 .venv/
+__pycache__/
+*.py[cod]
 .cache/
 compile_commands.json
 *.gguf

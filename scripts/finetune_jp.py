@@ -181,9 +181,9 @@ def main() -> None:
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--base-model", default="/home/sumeshi/models/privacy-filter-multilingual")
     ap.add_argument("--data", nargs="+", default=[
-        "datasets/generated/synthetic_address_jp.jsonl",
-        "datasets/generated/synthetic_date_id_jp.jsonl",
-        "datasets/generated/stockmark_ner_jp.jsonl",
+        "datasets/jp-data/generated/synthetic_address_jp.jsonl",
+        "datasets/jp-data/generated/synthetic_date_id_jp.jsonl",
+        "datasets/jp-data/generated/stockmark_ner_jp.jsonl",
     ])
     ap.add_argument("--out", default="/home/sumeshi/models/privacy-filter-jp-ft")
     ap.add_argument("--epochs", type=float, default=6.0)

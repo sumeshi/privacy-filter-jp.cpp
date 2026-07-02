@@ -106,7 +106,7 @@ pf_free(ctx);
 
 ## Fine-tuning
 
-データセットの設計方針と再現手順（学習データ生成・ファインチューニング・評価・GGUF 変換・公開）は [`docs/finetuning-jp.md`](docs/finetuning-jp.md) にまとめています。学習データの本体はリポジトリに含めておらず、取得・変換方法も同ドキュメントに記載しています。
+データセットの設計方針と再現手順（学習データ生成・ファインチューニング・評価・GGUF 変換・公開）は [`docs/finetuning-jp.md`](docs/finetuning-jp.md) にまとめています。日本語学習データの生成スクリプトは `datasets/jp-data` submodule で管理し、生成・変換済みの学習 JSONL は再配布しません。
 
 ## License
 

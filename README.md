@@ -106,7 +106,7 @@ This benchmark is small and intended for sanity and regression checking; it does
 
 ## Fine-tuning
 
-The dataset design and full reproduction steps (data generation, fine-tuning, evaluation, GGUF conversion, and publishing) are documented in [`docs/finetuning-jp.md`](docs/finetuning-jp.md) (in Japanese). The training data itself is not included in the repository; how to obtain and convert it is described in the same document.
+The dataset design and full reproduction steps (data generation, fine-tuning, evaluation, GGUF conversion, and publishing) are documented in [`docs/finetuning-jp.md`](docs/finetuning-jp.md) (in Japanese). Japanese training-data generators live in the `datasets/jp-data` submodule. Generated or converted training JSONL files are not redistributed.
 
 ## License
 
