@@ -32,9 +32,9 @@ set(GGML_BUILD_EXAMPLES OFF)
 
 # ggml defaults to a shared lib (libggml.so.0), which the bare pf-cli binary
 # can't find at runtime (no RPATH to ../ggml/src). Default to a static build
-# so pf-cli ships as a single self-contained executable. Presets/users that
-# want the backend-DL portable layout can still pass -DBUILD_SHARED_LIBS=ON.
-if (NOT DEFINED BUILD_SHARED_LIBS)
+# so pf-cli ships as a single self-contained executable -- except for the
+# backend-DL portable layout (release-portable), which *requires* shared libs.
+if (NOT DEFINED BUILD_SHARED_LIBS AND NOT GGML_BACKEND_DL)
     set(BUILD_SHARED_LIBS OFF CACHE BOOL "Build shared libraries" )
 endif()
 add_subdirectory(ggml)
