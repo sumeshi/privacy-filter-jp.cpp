@@ -80,7 +80,7 @@ HF_HUB_DISABLE_IMPLICIT_TOKEN=0 HF_HUB_DISABLE_XET=1 \
 python demo/gen_scan.py --cli build/release/pf-cli \
   --model <path>/privacy-filter-jp-f16.gguf \
   --doc demo/scan_doc_ja.txt --scene demo/traces/scan_ja \
-  --threshold 0.5 --label privacy-filter-jp.cpp --device "CPU · privacy-filter-jp v2 f16"
+  --threshold 0.5 --label privacy-filter-jp.cpp --device "CPU · privacy-filter-jp 2026-07-03 f16"
 
 # 2. ターミナルで再生（標準ライブラリのみで動く。--dilate は時間スケール）
 python demo/pii_scan.py --scene demo/traces/scan_ja --dilate 4

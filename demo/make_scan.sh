@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Render the single-document PII-scan TUI (pii_scan.py) for the "scan" scene,
+# Render the single-document PII-scan TUI (pii_scan.py) for the "scan_ja" scene,
 # record it with recorder-for-agents, trim the lead-in, append a branding outro.
 # The scene + real spans + real tok/s come from gen_scan.py (pf-cli output).
 #
@@ -10,12 +10,12 @@
 set -euo pipefail
 HERE=$(cd "$(dirname "$0")" && pwd)
 RECORDER=${RECORDER:-/home/rich/python/recorder-for-agents}
-SCENE=scan
+SCENE=scan_ja
 OUT=${1:-pii_scan.mp4}
 DILATE=${DILATE:-1}
 W=${WIDTH:-1280}; H=${HEIGHT:-720}; FS=${FONTSIZE:-16}; FPS=${FPS:-30}
 HOLD=${HOLD:-1.4}; CARD=${CARD:-3.5}
-LINK=${LINK:-github.com/richiejp/privacy-filter.cpp}
+LINK=${LINK:-github.com/sumeshi/privacy-filter-jp.cpp}
 SDIR="$HERE/traces/$SCENE"
 
 [ -d "$SDIR" ] || { echo "no scene at $SDIR (run gen_scan.py)"; exit 1; }
@@ -46,7 +46,7 @@ if [ -f "$RECORDER/examples/duel/trim_lead.sh" ]; then
 fi
 if [ -f "$RECORDER/examples/duel/outro.sh" ]; then
   OW="$W" OH="$H" TITLE="privacy-filter.cpp" \
-  LINK1="github.com/richiejp/privacy-filter.cpp" \
+  LINK1="github.com/sumeshi/privacy-filter-jp.cpp" \
   LINK2="on-device NER · Raspberry Pi 5 · real PII spans" \
     bash "$RECORDER/examples/duel/outro.sh" "$RAW" "$HERE/out/${NOEXT}_final.mp4"
   echo "-> $HERE/out/${NOEXT}_final.mp4"

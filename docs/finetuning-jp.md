@@ -183,7 +183,7 @@ python3 -m py_compile \
 
 なお、初期版の `synthetic_boundary_jp.jsonl` は旧 `eval`/`challenge` と同一テキストを含んでいた（train-test 汚染）ことが後から判明した。旧 split に対する公表値はこの点でも楽観的であり、smoke 値として扱う。現行の boundary 生成器は重複排除と `--exclude` によるベンチマーク除外を行う。
 
-v2 として手作りの `datasets/benchmark/{eval2,challenge2}.jsonl`（各 50 行超、全 8 ラベル・長文複合文書・電話フォーマット変種・日本特有 ID・フリガナ・負例・境界トラップを収録。ソースは `datasets/jp-data/scripts/make_benchmark_v2.py`）を追加した。調整・エラー分析には `eval2` を使い、`challenge2` は blind held-out として行単位の誤り確認をしない。旧 3 split は回帰確認用に残す。ベンチマークと学習データの重複は `validate_jsonl.py --against` で機械的に排除している。
+2026-07-03 版の手作りベンチマークとして `datasets/benchmark/{eval2,challenge2}.jsonl`（各 50 行超、全 8 ラベル・長文複合文書・電話フォーマット変種・日本特有 ID・フリガナ・負例・境界トラップを収録。ソースは `datasets/jp-data/scripts/make_benchmark_v2.py`）を追加した。調整・エラー分析には `eval2` を使い、`challenge2` は blind held-out として行単位の誤り確認をしない。旧 3 split は回帰確認用に残す。ベンチマークと学習データの重複は `validate_jsonl.py --against` で機械的に排除している。
 
 ## 注意事項
 

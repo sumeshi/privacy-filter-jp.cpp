@@ -45,26 +45,41 @@ huggingface-cli download sumeshi/privacy-filter-jp-GGUF privacy-filter-jp-f16.gg
 
 ## Usage
 
-Classify from the CLI. `--classify` reads UTF-8 text from stdin:
-`pf-cli --classify <model.gguf> <threshold> [device]`. The device argument is optional and accepts `cpu`, `gpu`, `cuda`, `vulkan`, or an indexed GPU such as `cuda:1`.
+The main CLI workflow is redaction. It reads UTF-8 text from stdin and writes the
+redacted text to stdout after inference finishes.
 
 ```sh
-build/release/pf-cli --info privacy-filter-jp-f16.gguf
 echo "配送先：〒160-0022 東京都新宿区新宿3-99-88 サンプルマンション101号室" | \
-  build/release/pf-cli --classify privacy-filter-jp-f16.gguf 0.5 cpu
+  ./pf-cli redact privacy-filter-jp-f16.gguf
 ```
 
-If you are using an extracted release binary instead of a source build, run the executable from that folder:
+Default output replaces each detected span with `***`:
+
+```text
+配送先：***
+```
+
+Use `--labels` when you want category names instead:
 
 ```sh
-./pf-cli --info privacy-filter-jp-f16.gguf
 echo "配送先：〒160-0022 東京都新宿区新宿3-99-88 サンプルマンション101号室" | \
-  ./pf-cli --classify privacy-filter-jp-f16.gguf 0.5 cpu
-
-# Windows PowerShell:
-"配送先：〒160-0022 東京都新宿区新宿3-99-88 サンプルマンション101号室" |
-  .\pf-cli.exe --classify privacy-filter-jp-f16.gguf 0.5 cpu
+  ./pf-cli redact privacy-filter-jp-f16.gguf --labels
 ```
+
+```text
+配送先：[ADDRESS]
+```
+
+Useful options:
+
+```sh
+./pf-cli redact privacy-filter-jp-f16.gguf --threshold 0.6 --device cuda
+cat input.txt | ./pf-cli classify privacy-filter-jp-f16.gguf --threshold 0.5
+./pf-cli info privacy-filter-jp-f16.gguf
+```
+
+Source builds use `build/release/pf-cli` instead of `./pf-cli`. On Windows
+PowerShell, use `.\pf-cli.exe redact privacy-filter-jp-f16.gguf`.
 
 To use it from a program, call the flat C API in [`include/pf.h`](include/pf.h). `pf_ctx` is an opaque handle, buffers are owned by the caller, and exceptions never cross the API boundary.
 
@@ -110,17 +125,17 @@ The eight target labels are listed below. Their definitions live in [`label_spac
 
 Exact-match span micro F1 on the regression datasets (`datasets/benchmark/`).
 
-The v2 benchmark (`eval2.jsonl` / `challenge2.jsonl`, 106 hand-written examples) targets realistic conditions: multi-paragraph business documents (emails with signature blocks, application forms, support logs), Japanese phone-number format variants, Japan-specific identifiers (My Number, driver's license, passport, pension, health insurance — all mapped to `account_number`), furigana name pairs, and PII-free negatives.
+The current benchmark (`eval2.jsonl` / `challenge2.jsonl`, 106 hand-written examples) targets realistic conditions: multi-paragraph business documents (emails with signature blocks, application forms, support logs), Japanese phone-number format variants, Japan-specific identifiers (My Number, driver's license, passport, pension, health insurance — all mapped to `account_number`), furigana name pairs, and PII-free negatives.
 
-| Benchmark | v1 model | v2 model |
+| Benchmark | OpenAI no-custom | Latest (2026-07-03) |
 |---|---:|---:|
-| `eval2` (realistic documents) | 0.400 | **0.717** |
-| `challenge2` (blind held-out) | 0.453 | **0.693** |
-| `challenge` (v1, regression) | 0.912 | **0.964** |
+| `eval2` (realistic documents) | 0.366 | **0.717** |
+| `challenge2` (blind held-out) | 0.400 | **0.693** |
+| `challenge` (legacy regression split) | 0.561 | **0.964** |
 
-Both columns are measured with the runtime's span post-processing (edge trimming and person-span splitting on enumeration/furigana separators), which the C API, `pf-cli`, and `scripts/run_pf_hf.py` all apply. The v1 splits (`train`/`eval`/`challenge`, 56 short single-sentence rows) turned out to share template-generated texts with the v1 training data, so the previously published v1 numbers (0.929 overall) were optimistic; the v1 splits are kept for regression checking only. Exact-match F1 is also strict: on `eval2`, most of the v2 model's remaining errors are span-boundary differences, not missed detections.
+Both columns are measured with the same span post-processing (edge trimming and person-span splitting on enumeration/furigana separators). `OpenAI no-custom` is `openai/privacy-filter` without this repository's Japanese fine-tune. The legacy splits (`train`/`eval`/`challenge`, 56 short single-sentence rows) turned out to share template-generated texts with earlier local training data, so previously published smoke numbers on those splits were optimistic; those splits are kept for regression checking only. Exact-match F1 is also strict: on `eval2`, most remaining errors in the latest model are span-boundary differences, not missed detections.
 
-This benchmark is still small and does not represent production accuracy. The v2 model (f16 and q8) is published at [sumeshi/privacy-filter-jp-GGUF](https://huggingface.co/sumeshi/privacy-filter-jp-GGUF). For dataset design and reproduction steps, see [`docs/finetuning-jp.md`](docs/finetuning-jp.md).
+This benchmark is still small and does not represent production accuracy. The latest f16 and q8 GGUF files are published at [sumeshi/privacy-filter-jp-GGUF](https://huggingface.co/sumeshi/privacy-filter-jp-GGUF). For dataset design and reproduction steps, see [`docs/finetuning-jp.md`](docs/finetuning-jp.md).
 
 ## Fine-tuning
 

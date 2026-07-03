@@ -13,7 +13,7 @@ Data (built by gen_scan.py from real pf-cli output):
   <scene>/content.json -> {"document","n_tokens","note","entities":[{type,start,end,text,score}]}
   <scene>/engines.json -> [{"label","device","tps"}]
 
-  python3 pii_scan.py --scene traces/scan --dilate 1
+  python3 pii_scan.py --scene traces/scan_ja --dilate 1
 """
 import argparse, bisect, json, time
 from pathlib import Path
@@ -62,7 +62,7 @@ def cat_colour(t):
     return CAT.get(t, DEFAULT_CAT)
 
 
-# ---- layout helpers (shared shape with pii_duel.py) ------------------------
+# ---- layout helpers ---------------------------------------------------------
 def wrap_ranges(s, width):
     """Greedy word-wrap over the source string -> (start, end) char ranges."""
     n = len(s); width = max(8, width)
@@ -260,7 +260,7 @@ def end_card(P, eng, note, link):
 def main():
     ap = argparse.ArgumentParser()
     here = Path(__file__).resolve().parent
-    ap.add_argument("--scene", default=str(here / "traces/scan"))
+    ap.add_argument("--scene", default=str(here / "traces/scan_ja"))
     ap.add_argument("--link", default="github.com/sumeshi/privacy-filter-jp.cpp")
     ap.add_argument("--fps", type=int, default=30)
     ap.add_argument("--dilate", type=float, default=1.0, help="time scale (1 = real time)")

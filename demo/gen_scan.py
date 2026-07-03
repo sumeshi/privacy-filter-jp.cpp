@@ -1,13 +1,12 @@
 #!/usr/bin/env python3
 """Build the single-document NER-scan trace for pii_scan.py from REAL pf-cli output.
 
-Unlike gen_corpus.py (which tiles a paragraph and replicates hard-coded spans),
-this runs the actual engine on demo/scan_doc.txt:
+This runs the actual engine on demo/scan_doc_ja.txt:
   * pf-cli --tok-batch  -> exact token count (vocab only)
-  * pf-cli --classify   -> real entity spans (entity_group/start/end/score/text)
+  * pf-cli classify     -> real entity spans (entity_group/start/end/score/text)
 
 so every span and category on screen is exactly what the model emits. Writes
-demo/traces/scan/{content.json,engines.json}.
+demo/traces/scan_ja/{content.json,engines.json}.
 
   python3 gen_scan.py --cli build/release/pf-cli \
       --model ~/ggufs_perf/pf-q8experts.gguf --ld build/release/ggml/src \
@@ -39,8 +38,8 @@ def main():
     ap.add_argument("--cli", required=True)
     ap.add_argument("--model", required=True)
     ap.add_argument("--ld", default="", help="LD_LIBRARY_PATH for source-build shared ggml libraries; omit for release binaries")
-    ap.add_argument("--doc", default=str(HERE / "scan_doc.txt"))
-    ap.add_argument("--scene", default=str(HERE / "traces/scan"))
+    ap.add_argument("--doc", default=str(HERE / "scan_doc_ja.txt"))
+    ap.add_argument("--scene", default=str(HERE / "traces/scan_ja"))
     ap.add_argument("--threshold", default="0.5")
     ap.add_argument("--run-device", default="cpu",
                     help="pf-cli classify device argument: cpu, gpu, cuda, vulkan, cuda:1, ...")
@@ -53,9 +52,9 @@ def main():
 
     doc_bytes = Path(a.doc).read_bytes()
     n_tok = token_count(a.cli, a.ld, a.model, doc_bytes)
-    classify_args = ["--classify", a.model, a.threshold]
+    classify_args = ["classify", a.model, "--threshold", a.threshold]
     if a.run_device:
-        classify_args.append(a.run_device)
+        classify_args += ["--device", a.run_device]
     r = run_cli(a.cli, a.ld, classify_args, stdin=doc_bytes)
     r.check_returncode()
     ents_raw = json.loads(r.stdout)

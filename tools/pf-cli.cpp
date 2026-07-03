@@ -1,14 +1,15 @@
 // pf-cli — inspect and run the privacy-filter model.
-//   pf-cli --info <model.gguf>
-//   pf-cli --classify <model.gguf> <threshold> [cpu|gpu|cuda|vulkan|cuda:N] < text.txt
-//   pf-cli --model <model.gguf> --tokens <tokens.i32> [--device cpu|gpu|cuda|vulkan|cuda:N]
-//          [--threads N] [--dump-taps DIR] [--logits-out FILE]
+//   cat text.txt | pf-cli redact <model.gguf> [--threshold 0.5] [--device cpu] [--labels]
+//   cat text.txt | pf-cli classify <model.gguf> [--threshold 0.5] [--device cpu]
+//   pf-cli info <model.gguf>
 #include "gguf_loader.h"
 #include "pf.h"
 #include "model.h"
 #include "ner.h"
 #include "tokenizer.h"
 
+#include <algorithm>
+#include <cstdlib>
 #include <cstdio>
 #include <cstring>
 #include <string>
@@ -119,16 +120,240 @@ static int tok_batch(const char * gguf, const char * in_path, const char * out_p
     return 0;
 }
 
+static bool label_is(const char * label, const char * want) {
+    return label && std::strcmp(label, want) == 0;
+}
+
+static const char * redaction_for_label(const char * label) {
+    if (label_is(label, "private_person") || label_is(label, "FIRSTNAME") ||
+        label_is(label, "LASTNAME") || label_is(label, "MIDDLENAME") ||
+        label_is(label, "JOBTITLE")) {
+        return "[PERSON]";
+    }
+    if (label_is(label, "private_address") || label_is(label, "STREET") ||
+        label_is(label, "BUILDINGNUMBER") || label_is(label, "CITY") ||
+        label_is(label, "ZIPCODE") || label_is(label, "STATE") ||
+        label_is(label, "COUNTY") || label_is(label, "SECONDARYADDRESS")) {
+        return "[ADDRESS]";
+    }
+    if (label_is(label, "private_email") || label_is(label, "EMAIL")) {
+        return "[EMAIL]";
+    }
+    if (label_is(label, "private_phone") || label_is(label, "PHONE") ||
+        label_is(label, "PHONENUMBER")) {
+        return "[PHONE]";
+    }
+    if (label_is(label, "private_date") || label_is(label, "DATE") ||
+        label_is(label, "DATEOFBIRTH") || label_is(label, "AGE") ||
+        label_is(label, "TIME")) {
+        return "[DATE]";
+    }
+    if (label_is(label, "private_url") || label_is(label, "URL")) {
+        return "[URL]";
+    }
+    if (label_is(label, "secret") || label_is(label, "PASSWORD")) {
+        return "[SECRET]";
+    }
+    if (label_is(label, "account_number") || label_is(label, "ACCOUNTNUMBER") ||
+        label_is(label, "BANKACCOUNT") || label_is(label, "ACCOUNTNAME") ||
+        label_is(label, "USERNAME") || label_is(label, "IBAN") ||
+        label_is(label, "SSN") || label_is(label, "PIN") ||
+        label_is(label, "CVV") || label_is(label, "CREDITCARDNUMBER") ||
+        label_is(label, "BIC") || label_is(label, "VRM") ||
+        label_is(label, "IPADDRESS") || label_is(label, "MAC") ||
+        label_is(label, "AMOUNT") || label_is(label, "HEIGHT")) {
+        return "[ACCOUNT]";
+    }
+    return "[REDACTED]";
+}
+
+static void print_redacted(const std::string & text, pf_entity * ents, size_t n_ents,
+                           bool labels, const std::string & replacement) {
+    if (n_ents == 0 || !ents) {
+        std::fwrite(text.data(), 1, text.size(), stdout);
+        std::fputc('\n', stdout);
+        return;
+    }
+
+    std::vector<pf_entity> sorted(ents, ents + n_ents);
+    std::sort(sorted.begin(), sorted.end(), [](const pf_entity & a, const pf_entity & b) {
+        if (a.start != b.start) return a.start < b.start;
+        return a.end > b.end;
+    });
+
+    size_t cursor = 0;
+    for (const pf_entity & e : sorted) {
+        if (e.start < 0 || e.end <= e.start || (size_t) e.end > text.size()) continue;
+        const size_t start = (size_t) e.start;
+        const size_t end = (size_t) e.end;
+        if (end <= cursor) continue;
+        if (start > cursor) {
+            std::fwrite(text.data() + cursor, 1, start - cursor, stdout);
+        }
+        std::fputs(labels ? redaction_for_label(e.label) : replacement.c_str(), stdout);
+        cursor = end;
+    }
+    if (cursor < text.size()) {
+        std::fwrite(text.data() + cursor, 1, text.size() - cursor, stdout);
+    }
+    std::fputc('\n', stdout);
+}
+
+static int usage(int rc = 2) {
+    FILE * out = rc == 0 ? stdout : stderr;
+    std::fprintf(out,
+        "usage:\n"
+        "  cat input.txt | pf-cli redact <model.gguf> [--threshold 0.5] [--device cpu] [--labels]\n"
+        "  cat input.txt | pf-cli classify <model.gguf> [--threshold 0.5] [--device cpu]\n"
+        "  pf-cli info <model.gguf>\n"
+        "\n"
+        "redact output:\n"
+        "  default       replace each detected span with ***\n"
+        "  --labels      replace spans with labels like [PERSON] and [ADDRESS]\n"
+        "\n"
+        "devices:\n"
+        "  cpu, gpu, cuda, vulkan, cuda:N, vulkan:N\n"
+        "\n"
+        "examples:\n"
+        "  echo 'お問い合わせは山田太郎（taro@example.com）まで' | pf-cli redact privacy-filter-jp-f16.gguf\n"
+        "  echo 'お問い合わせは山田太郎（taro@example.com）まで' | pf-cli redact privacy-filter-jp-f16.gguf --labels\n"
+        "  echo '...' | pf-cli classify privacy-filter-jp-f16.gguf --threshold 0.5\n"
+        "\n"
+        "note:\n"
+        "  stdin is read to EOF before inference; output is emitted after spans are known.\n"
+        "\n"
+        "developer:\n"
+        "  pf-cli --model <model.gguf> --tokens <tokens.i32> [--device cpu]\n");
+    return rc;
+}
+
+struct text_cli_args {
+    std::string model;
+    std::string device = "cpu";
+    std::string replacement = "***";
+    float threshold = 0.5f;
+    bool labels = false;
+};
+
+static bool parse_float(const char * s, float & out) {
+    if (!s || !*s) return false;
+    char * end = nullptr;
+    const float v = std::strtof(s, &end);
+    if (!end || *end != '\0') return false;
+    out = v;
+    return true;
+}
+
+static bool parse_text_args(int argc, char ** argv, int model_i, text_cli_args & out) {
+    if (model_i >= argc) return false;
+    out.model = argv[model_i];
+    for (int i = model_i + 1; i < argc; i++) {
+        const std::string a = argv[i];
+        if (a == "--threshold" || a == "-t") {
+            if (++i >= argc || !parse_float(argv[i], out.threshold)) return false;
+        } else if (a == "--device" || a == "-d") {
+            if (++i >= argc) return false;
+            out.device = argv[i];
+        } else if (a == "--labels") {
+            out.labels = true;
+        } else if (a == "--replacement") {
+            if (++i >= argc) return false;
+            out.replacement = argv[i];
+        } else if (a == "--help" || a == "-h") {
+            return false;
+        } else if (!a.empty() && a[0] == '-') {
+            std::fprintf(stderr, "unknown option: %s\n", a.c_str());
+            return false;
+        } else {
+            float threshold = 0.0f;
+            if (parse_float(a.c_str(), threshold)) out.threshold = threshold;
+            else out.device = a;
+        }
+    }
+    return true;
+}
+
+static bool read_stdin(std::string & text) {
+    char buf[65536];
+    size_t r;
+    while ((r = std::fread(buf, 1, sizeof(buf), stdin)) > 0) text.append(buf, r);
+    if (std::ferror(stdin)) return false;
+    if (!text.empty() && text.back() == '\n') text.pop_back();
+    return true;
+}
+
+static int run_text_mode(bool classify_mode, int argc, char ** argv, int model_i) {
+    text_cli_args a;
+    if (!parse_text_args(argc, argv, model_i, a)) return usage();
+
+    std::string text;
+    if (!read_stdin(text)) {
+        std::fprintf(stderr, "failed to read stdin\n");
+        return 1;
+    }
+
+    pf_ctx * ctx = pf_load(a.model.c_str(), a.device.c_str(), 0);
+    if (pf_last_error(ctx)) {
+        std::fprintf(stderr, "load: %s\n", pf_last_error(ctx));
+        pf_free(ctx);
+        return 1;
+    }
+
+    pf_entity * ents = nullptr;
+    size_t n_ents = 0;
+    if (pf_classify(ctx, text.data(), text.size(), a.threshold, &ents, &n_ents) != 0) {
+        std::fprintf(stderr, "classify: %s\n", pf_last_error(ctx));
+        pf_free(ctx);
+        return 1;
+    }
+
+    if (!classify_mode) {
+        print_redacted(text, ents, n_ents, a.labels, a.replacement);
+        pf_entities_free(ents, n_ents);
+        pf_free(ctx);
+        return 0;
+    }
+
+    std::printf("[");
+    for (size_t i = 0; i < n_ents; i++) {
+        std::printf("%s\n  {\"entity_group\": \"%s\", \"start\": %d, \"end\": %d, "
+                    "\"score\": %.4f, \"text\": \"%.*s\"}",
+                    i ? "," : "", ents[i].label, ents[i].start, ents[i].end,
+                    ents[i].score, ents[i].end - ents[i].start, text.data() + ents[i].start);
+    }
+    std::printf("\n]\n");
+
+    pf_entities_free(ents, n_ents);
+    pf_free(ctx);
+    return 0;
+}
+
 int main(int argc, char ** argv) {
+    if (argc < 2 || std::strcmp(argv[1], "--help") == 0 || std::strcmp(argv[1], "-h") == 0) {
+        return usage(argc < 2 ? 2 : 0);
+    }
+    if (argc == 3 && (std::strcmp(argv[1], "info") == 0 || std::strcmp(argv[1], "--info") == 0)) {
+        return info(argv[2]);
+    }
+    if (std::strcmp(argv[1], "redact") == 0 || std::strcmp(argv[1], "--redact") == 0) {
+        return run_text_mode(false, argc, argv, 2);
+    }
+    if (std::strcmp(argv[1], "classify") == 0 || std::strcmp(argv[1], "--classify") == 0) {
+        return run_text_mode(true, argc, argv, 2);
+    }
     if (argc == 3 && std::strcmp(argv[1], "--info") == 0) {
         return info(argv[2]);
     }
     if (argc == 5 && std::strcmp(argv[1], "--tok-batch") == 0) {
         return tok_batch(argv[2], argv[3], argv[4]);
     }
-    // full pipeline through the public C API:
+    // Legacy flag-style entry points, kept for older scripts.
     //   pf-cli --classify <model> <threshold> [device] < text.txt
-    if ((argc == 4 || argc == 5) && std::strcmp(argv[1], "--classify") == 0) {
+    //   pf-cli --redact   <model> <threshold> [device] < text.txt
+    const char * cmd = argc > 1 ? argv[1] : "";
+    const bool classify_mode = std::strcmp(cmd, "--classify") == 0;
+    const bool redact_mode = std::strcmp(cmd, "--redact") == 0;
+    if ((argc == 4 || argc == 5) && (classify_mode || redact_mode)) {
         std::string text;
         char buf[65536];
         size_t r;
@@ -146,6 +371,12 @@ int main(int argc, char ** argv) {
         if (pf_classify(ctx, text.data(), text.size(), thr, &ents, &n_ents) != 0) {
             std::fprintf(stderr, "classify: %s\n", pf_last_error(ctx));
             return 1;
+        }
+        if (redact_mode) {
+            print_redacted(text, ents, n_ents, false, "***");
+            pf_entities_free(ents, n_ents);
+            pf_free(ctx);
+            return 0;
         }
         std::printf("[");
         for (size_t i = 0; i < n_ents; i++) {
@@ -182,6 +413,7 @@ int main(int argc, char ** argv) {
         std::fprintf(stderr,
             "usage: pf-cli --info <model.gguf>\n"
             "       pf-cli --classify <model.gguf> <threshold> [cpu|gpu|cuda|vulkan|cuda:N] < text.txt\n"
+            "       pf-cli --redact   <model.gguf> <threshold> [cpu|gpu|cuda|vulkan|cuda:N] < text.txt\n"
             "       pf-cli --model <model.gguf> --tokens <tokens.i32> [--device cpu|gpu|cuda|vulkan|cuda:N]\n"
             "              [--threads N] [--window N] [--dump-taps DIR] [--logits-out FILE]\n"
             "              [--offsets <offsets.i32> --text <text.txt> [--threshold F]]\n");

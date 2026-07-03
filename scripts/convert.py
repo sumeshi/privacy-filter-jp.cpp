@@ -8,13 +8,12 @@ src/model.cpp) expects. It does NOT depend on llama.cpp or its convert script â€
 the architecture is small and fully specified by the loader, so the whole
 mapping lives here.
 
-Models already converted with this script are published at:
-  - https://huggingface.co/LocalAI-io/privacy-filter-multilingual-GGUF
-  - https://huggingface.co/LocalAI-io/privacy-filter-GGUF
+The Japanese GGUF built with this script is published at:
+  - https://huggingface.co/sumeshi/privacy-filter-jp-GGUF
 
 Usage:
-  python scripts/convert.py --model ~/models/privacy-filter-multilingual \\
-      --outfile pf-rope2-f16.gguf                # f16 (default), the shipped precision
+  python scripts/convert.py --model runs/pf-jp/model-ft \\
+      --outfile runs/pf-jp/privacy-filter-jp-f16.gguf --name privacy-filter-jp
   python scripts/convert.py --model <dir> --outtype f32 --outfile pf-f32.gguf
 
 The architecture (gpt-oss MoE body re-purposed as a bidirectional token

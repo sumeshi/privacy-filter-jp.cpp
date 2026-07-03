@@ -45,26 +45,39 @@ huggingface-cli download sumeshi/privacy-filter-jp-GGUF privacy-filter-jp-f16.gg
 
 ## Usage
 
-CLI で分類します。`--classify` は UTF-8 テキストを stdin から読み取ります。
-形式は `pf-cli --classify <model.gguf> <threshold> [device]` です。`device` は省略可能で、`cpu`、`gpu`、`cuda`、`vulkan`、または `cuda:1` のような GPU 番号指定を渡せます。
+CLI の基本用途は redact です。UTF-8 テキストを stdin から読み取り、推論完了後にマスク済みテキストを stdout に出力します。
 
 ```sh
-build/release/pf-cli --info privacy-filter-jp-f16.gguf
 echo "配送先：〒160-0022 東京都新宿区新宿3-99-88 サンプルマンション101号室" | \
-  build/release/pf-cli --classify privacy-filter-jp-f16.gguf 0.5 cpu
+  ./pf-cli redact privacy-filter-jp-f16.gguf
 ```
 
-ソースビルドではなく展開済みの release バイナリを使う場合は、展開先フォルダから実行します。
+デフォルトでは検出した span を `***` に置換します。
+
+```text
+配送先：***
+```
+
+カテゴリ名を残したい場合は `--labels` を付けます。
 
 ```sh
-./pf-cli --info privacy-filter-jp-f16.gguf
 echo "配送先：〒160-0022 東京都新宿区新宿3-99-88 サンプルマンション101号室" | \
-  ./pf-cli --classify privacy-filter-jp-f16.gguf 0.5 cpu
-
-# Windows PowerShell:
-"配送先：〒160-0022 東京都新宿区新宿3-99-88 サンプルマンション101号室" |
-  .\pf-cli.exe --classify privacy-filter-jp-f16.gguf 0.5 cpu
+  ./pf-cli redact privacy-filter-jp-f16.gguf --labels
 ```
+
+```text
+配送先：[ADDRESS]
+```
+
+よく使うオプション:
+
+```sh
+./pf-cli redact privacy-filter-jp-f16.gguf --threshold 0.6 --device cuda
+cat input.txt | ./pf-cli classify privacy-filter-jp-f16.gguf --threshold 0.5
+./pf-cli info privacy-filter-jp-f16.gguf
+```
+
+ソースビルドの場合は `./pf-cli` の代わりに `build/release/pf-cli` を使います。Windows PowerShell では `.\pf-cli.exe redact privacy-filter-jp-f16.gguf` の形で実行します。
 
 プログラムから利用する場合は、[`include/pf.h`](include/pf.h) のフラット C API を使います。`pf_ctx` は不透明ハンドラで、バッファは呼び出し側が所有し、例外は API 境界を越えません。
 
@@ -110,17 +123,17 @@ pf_free(ctx);
 
 回帰確認用データセット（`datasets/benchmark/`）での span 完全一致 micro F1 です。
 
-v2 ベンチマーク（`eval2.jsonl` / `challenge2.jsonl`、手書き 106 例）は現実的な条件を対象にしています: 複数段落の業務文書（署名ブロック付きメール・申込フォーム・問い合わせ対応ログ）、日本の電話番号フォーマット変種、日本特有の識別番号（マイナンバー・運転免許証番号・旅券番号・基礎年金番号・保険証記号番号。いずれも `account_number` に集約）、フリガナ併記の氏名、PII を含まない負例です。
+現行ベンチマーク（`eval2.jsonl` / `challenge2.jsonl`、手書き 106 例）は現実的な条件を対象にしています: 複数段落の業務文書（署名ブロック付きメール・申込フォーム・問い合わせ対応ログ）、日本の電話番号フォーマット変種、日本特有の識別番号（マイナンバー・運転免許証番号・旅券番号・基礎年金番号・保険証記号番号。いずれも `account_number` に集約）、フリガナ併記の氏名、PII を含まない負例です。
 
-| ベンチマーク | v1 モデル | v2 モデル |
+| ベンチマーク | OpenAI ノンカスタム | 最新版（2026-07-03） |
 |---|---:|---:|
-| `eval2`（現実的な文書） | 0.400 | **0.717** |
-| `challenge2`（blind held-out） | 0.453 | **0.693** |
-| `challenge`（v1・回帰確認） | 0.912 | **0.964** |
+| `eval2`（現実的な文書） | 0.366 | **0.717** |
+| `challenge2`（blind held-out） | 0.400 | **0.693** |
+| `challenge`（旧回帰確認 split） | 0.561 | **0.964** |
 
-両列とも、ランタイム同梱のスパン後処理（端のトリムと、連名・フリガナ区切りでの人名スパン分割。C API / `pf-cli` / `scripts/run_pf_hf.py` が共通で適用）込みで測定しています。v1 の split（`train`/`eval`/`challenge`、短文 56 行）は v1 学習データとテンプレート由来の同一テキストを共有していたことが後から判明したため、過去に公表した v1 の数値（全体 0.929）は楽観的でした。v1 split は回帰確認用としてのみ残しています。また完全一致 F1 は厳格な指標で、`eval2` における v2 モデルの残存エラーの大半は境界ズレであり、検出漏れではありません。
+両列とも、同じスパン後処理（端のトリムと、連名・フリガナ区切りでの人名スパン分割）込みで測定しています。`OpenAI ノンカスタム` は、このリポジトリの日本語 fine-tune を入れていない `openai/privacy-filter` です。旧 split（`train`/`eval`/`challenge`、短文 56 行）は以前のローカル学習データとテンプレート由来の同一テキストを共有していたことが後から判明したため、過去に公表した smoke 数値は楽観的でした。旧 split は回帰確認用としてのみ残しています。また完全一致 F1 は厳格な指標で、`eval2` における最新版の残存エラーの大半は境界ズレであり、検出漏れではありません。
 
-このベンチマークは依然小規模で、実運用精度を示すものではありません。v2 モデル（f16 / q8）は [sumeshi/privacy-filter-jp-GGUF](https://huggingface.co/sumeshi/privacy-filter-jp-GGUF) で公開しています。データセット設計と再現手順は [`docs/finetuning-jp.md`](docs/finetuning-jp.md) を参照してください。
+このベンチマークは依然小規模で、実運用精度を示すものではありません。最新版の f16 / q8 GGUF は [sumeshi/privacy-filter-jp-GGUF](https://huggingface.co/sumeshi/privacy-filter-jp-GGUF) で公開しています。データセット設計と再現手順は [`docs/finetuning-jp.md`](docs/finetuning-jp.md) を参照してください。
 
 ## Fine-tuning
 

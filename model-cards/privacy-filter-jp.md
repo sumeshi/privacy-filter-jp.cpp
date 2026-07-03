@@ -42,15 +42,15 @@ production guarantee.
 
 ## Training Summary
 
-v2 release candidate trained locally on 2026-07-03:
+Latest release candidate trained locally on 2026-07-03:
 
 - base: multilingual privacy-filter compatible checkpoint
-- final checkpoint: `runs/pf-jp/model-ft-v2b`
+- release date: 2026-07-03
 - one-shot fine-tune from the base model (no incremental stages): 3 epochs,
   learning rate `1e-4`, batch size 8, max length 384
 - label space unchanged from the base model (no new classifier rows; Japanese
   identifiers are aliased into `account_number`), so model size and inference
-  speed are identical to v1
+  speed are identical to the baseline
 - GGUF f16 sha256: `e2bafc05ef7e6beb354e78cd77c8cfb5101d55044f23b2cdf343731a882f3b1c`
 - GGUF q8 (experts-only Q8_0) sha256: `de9499518ade053d65d20c2eaae2833954e114d29dd77fa7466dade782da9cd6`
 
@@ -84,23 +84,24 @@ No real PII is intentionally used.
 
 Exact-match span micro F1, measured with the runtime span post-processing that
 ships with `privacy-filter.cpp` (edge trimming and person-span splitting).
-The v2 benchmark (`datasets/benchmark/{eval2,challenge2}.jsonl`, 106
+The current benchmark (`datasets/benchmark/{eval2,challenge2}.jsonl`, 106
 hand-written examples) targets realistic multi-paragraph business documents,
 Japanese phone-format variants, Japan-specific identifiers, furigana name
 pairs, and PII-free negatives. `challenge2` is kept blind: it is never used
 for tuning or per-row error analysis.
 
-| benchmark | v1 model | v2 model |
+| benchmark | openai/privacy-filter no-custom | latest (2026-07-03) |
 | --- | ---: | ---: |
-| `eval2` (realistic documents) | 0.400 | 0.717 |
-| `challenge2` (blind held-out) | 0.453 | 0.693 |
-| `challenge` (v1 split, regression) | 0.912 | 0.964 |
+| `eval2` (realistic documents) | 0.366 | 0.717 |
+| `challenge2` (blind held-out) | 0.400 | 0.693 |
+| `challenge` (legacy regression split) | 0.561 | 0.964 |
 
-The v1 split numbers previously published (0.929 overall) predate this
-pipeline and were optimistic: the v1 boundary training data shared
-template-generated texts with the v1 `eval`/`challenge` splits.
+The no-custom column is `openai/privacy-filter` without this repository's
+Japanese fine-tune. Legacy split numbers previously published (0.929 overall)
+predate this pipeline and were optimistic: earlier local training data shared
+template-generated texts with the old `eval`/`challenge` splits.
 
-Label-level v2 result on `eval2.jsonl`:
+Label-level result for latest (2026-07-03) on `eval2.jsonl`:
 
 | label | precision | recall | F1 | partial-fn |
 | --- | ---: | ---: | ---: | ---: |
@@ -140,7 +141,7 @@ This GGUF uses the custom `openai-privacy-filter` architecture supported by
 ```sh
 build/release/pf-cli --info privacy-filter-jp-f16.gguf
 echo "配送先：〒160-0022 東京都新宿区新宿3-99-88 サンプルマンション101号室" | \
-  build/release/pf-cli --classify privacy-filter-jp-f16.gguf 0.5 cpu
+  build/release/pf-cli redact privacy-filter-jp-f16.gguf --labels
 ```
 
 ## Source
