@@ -57,3 +57,47 @@ jobs:
         with:
           name: ${{ env.NAME }}
           path: ${{ env.NAME }}.tar.gz
+
+  build-windows:
+    name: windows-x86_64
+    runs-on: windows-latest
+    env:
+      NAME: privacy-filter-jp-cli-windows-x86_64
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: configure
+        run: cmake --preset release-portable -DPF_BUILD_TESTS=OFF
+
+      # VS is multi-config: --config Release here, and the ggml-cpu ISA
+      # variant DLLs are loaded at run time (GGML_BACKEND_DL), same as the
+      # Linux .so packaging above -- ship pf-cli.exe plus every ggml DLL
+      # next to it.
+      - name: build
+        run: cmake --build build/release-portable --config Release --parallel 4
+
+      - name: stage archive
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Path $env:NAME | Out-Null
+          Get-ChildItem -Path build/release-portable -Recurse -File |
+            Where-Object { $_.Name -eq 'pf-cli.exe' -or $_.Extension -eq '.dll' } |
+            Copy-Item -Destination $env:NAME
+          Copy-Item README.md,LICENSE $env:NAME
+          Get-ChildItem $env:NAME
+          Compress-Archive -Path $env:NAME -DestinationPath "$env:NAME.zip"
+
+      - name: upload to release
+        if: github.event_name == 'release'
+        uses: softprops/action-gh-release@v2
+        with:
+          files: ${{ env.NAME }}.zip
+
+      - name: upload as artifact (manual build)
+        if: github.event_name == 'workflow_dispatch'
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ env.NAME }}
+          path: ${{ env.NAME }}.zip

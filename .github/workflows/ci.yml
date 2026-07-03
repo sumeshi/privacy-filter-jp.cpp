@@ -58,3 +58,20 @@ jobs:
           n=$(objdump -d "$so" | grep -c '%zmm')
           echo "skylakex %zmm instructions: $n"
           test "$n" -gt 0
+
+  # MSVC build keeps the Windows release path green (release.yml ships
+  # pf-cli.exe from the same preset). VS is multi-config, so --config/-C
+  # Release is passed explicitly instead of relying on CMAKE_BUILD_TYPE.
+  windows:
+    name: windows-msvc-release
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+      - name: configure
+        run: cmake --preset release-portable -DGGML_NATIVE=OFF
+      - name: build
+        run: cmake --build build/release-portable --config Release --parallel 4
+      - name: test (model-independent)
+        run: ctest --test-dir build/release-portable -C Release -LE model --output-on-failure

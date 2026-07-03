@@ -24,7 +24,9 @@ Note: this is an experimental initial release and does not guarantee complete an
 
 ## Installation
 
-Build from source:
+Prebuilt CLI binaries (Linux x86-64 `.tar.gz`, Windows x86-64 `.zip`) are attached to [GitHub Releases](https://github.com/sumeshi/privacy-filter-jp.cpp/releases): download, extract, and run `pf-cli` / `pf-cli.exe` from the extracted folder (it loads the bundled ggml libraries next to it) — no toolchain required. Then grab a GGUF from Hugging Face as shown below.
+
+Or build from source:
 
 ```sh
 git clone --recursive https://github.com/sumeshi/privacy-filter-jp.cpp
@@ -105,7 +107,7 @@ The v2 benchmark (`eval2.jsonl` / `challenge2.jsonl`, 106 hand-written examples)
 
 Both columns are measured with the runtime's span post-processing (edge trimming and person-span splitting on enumeration/furigana separators), which the C API, `pf-cli`, and `scripts/run_pf_hf.py` all apply. The v1 splits (`train`/`eval`/`challenge`, 56 short single-sentence rows) turned out to share template-generated texts with the v1 training data, so the previously published v1 numbers (0.929 overall) were optimistic; the v1 splits are kept for regression checking only. Exact-match F1 is also strict: on `eval2`, most of the v2 model's remaining errors are span-boundary differences, not missed detections.
 
-This benchmark is still small and does not represent production accuracy. The Hugging Face repo [sumeshi/privacy-filter-jp-GGUF](https://huggingface.co/sumeshi/privacy-filter-jp-GGUF) currently hosts the v1 model; the v2 upload is pending. For dataset design and reproduction steps, see [`docs/finetuning-jp.md`](docs/finetuning-jp.md).
+This benchmark is still small and does not represent production accuracy. The v2 model (f16 and q8) is published at [sumeshi/privacy-filter-jp-GGUF](https://huggingface.co/sumeshi/privacy-filter-jp-GGUF). For dataset design and reproduction steps, see [`docs/finetuning-jp.md`](docs/finetuning-jp.md).
 
 ## Fine-tuning
 

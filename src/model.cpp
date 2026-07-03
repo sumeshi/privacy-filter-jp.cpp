@@ -5,6 +5,11 @@
 #include <cmath>
 #include <cstring>
 
+// M_PI is POSIX, not standard C++ (absent on MSVC/mingw without _USE_MATH_DEFINES).
+#ifndef M_PI
+#define M_PI 3.14159265358979323846
+#endif
+
 namespace pf {
 
 void fill_swa_mask(float * dst, int64_t n, int64_t radius) {
