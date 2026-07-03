@@ -92,6 +92,18 @@ if (PF_BUILD_TOOLS)
     # for de-windowing; see docs/cpu-perf.md. Args: [block] [tokens].
     add_executable(pf-banded-proto bench/banded_attn_proto.cpp)
     target_link_libraries(pf-banded-proto PRIVATE ggml)
+
+    # In the shared-lib portable layout (GGML_BACKEND_DL) the ggml runtime
+    # libs (libggml.so.0 etc.) are placed next to pf-cli in the release
+    # archive. Without an RPATH the loader can't find them there. `$ORIGIN`
+    # makes the binary look in its own directory, matching how the archive
+    # is staged (.so/.dll alongside the executable). Skipped for static
+    # builds (no shared deps) and Windows (DLLs are found by the OS next
+    # to the .exe already).
+    if (BUILD_SHARED_LIBS AND NOT WIN32)
+        set_target_properties(pf-cli pf-bench pf-gemm-bench pf-banded-proto
+            PROPERTIES BUILD_RPATH "$ORIGIN" INSTALL_RPATH "$ORIGIN")
+    endif()
 endif()
 
 if (PF_FUZZ)
