@@ -39,6 +39,13 @@ if (PF_FUZZ)
     add_link_options(-fsanitize=${PF_FUZZ_SANITIZERS})
 endif()
 
+# cl parses -Wextra as /W + numeric warning level (error D8021).
+if (MSVC)
+    set(PF_WARNING_FLAGS /W4)
+else()
+    set(PF_WARNING_FLAGS -Wall -Wextra)
+endif()
+
 add_library(pf STATIC
     src/backend.cpp
     src/gguf_loader.cpp
@@ -49,13 +56,13 @@ add_library(pf STATIC
 )
 target_include_directories(pf PUBLIC include)
 target_link_libraries(pf PUBLIC ggml)
-target_compile_options(pf PRIVATE -Wall -Wextra)
+target_compile_options(pf PRIVATE ${PF_WARNING_FLAGS})
 
 if (PF_BUILD_TOOLS)
     add_executable(pf-cli tools/pf-cli.cpp)
     target_link_libraries(pf-cli PRIVATE pf)
     target_include_directories(pf-cli PRIVATE src)
-    target_compile_options(pf-cli PRIVATE -Wall -Wextra)
+    target_compile_options(pf-cli PRIVATE ${PF_WARNING_FLAGS})
 
     add_executable(pf-bench bench/pf-bench.cpp)
     target_link_libraries(pf-bench PRIVATE pf)
