@@ -140,7 +140,7 @@ This GGUF uses the custom `openai-privacy-filter` architecture supported by
 ```sh
 build/release/pf-cli --info privacy-filter-jp-f16.gguf
 echo "配送先：〒160-0022 東京都新宿区新宿3-99-88 サンプルマンション101号室" | \
-  build/release/pf-cli --classify privacy-filter-jp-f16.gguf 0.5
+  build/release/pf-cli --classify privacy-filter-jp-f16.gguf 0.5 cpu
 ```
 
 ## Source

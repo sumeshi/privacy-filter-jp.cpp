@@ -1,6 +1,7 @@
 // pf-cli — inspect and run the privacy-filter model.
 //   pf-cli --info <model.gguf>
-//   pf-cli --model <model.gguf> --tokens <tokens.i32> [--device cpu|cuda|vulkan]
+//   pf-cli --classify <model.gguf> <threshold> [cpu|gpu|cuda|vulkan|cuda:N] < text.txt
+//   pf-cli --model <model.gguf> --tokens <tokens.i32> [--device cpu|gpu|cuda|vulkan|cuda:N]
 //          [--threads N] [--dump-taps DIR] [--logits-out FILE]
 #include "gguf_loader.h"
 #include "pf.h"
@@ -125,7 +126,8 @@ int main(int argc, char ** argv) {
     if (argc == 5 && std::strcmp(argv[1], "--tok-batch") == 0) {
         return tok_batch(argv[2], argv[3], argv[4]);
     }
-    // full pipeline through the public C API: pf-cli --classify <model> <<< text
+    // full pipeline through the public C API:
+    //   pf-cli --classify <model> <threshold> [device] < text.txt
     if ((argc == 4 || argc == 5) && std::strcmp(argv[1], "--classify") == 0) {
         std::string text;
         char buf[65536];
@@ -179,7 +181,8 @@ int main(int argc, char ** argv) {
     if (model_path.empty() || tokens_path.empty()) {
         std::fprintf(stderr,
             "usage: pf-cli --info <model.gguf>\n"
-            "       pf-cli --model <model.gguf> --tokens <tokens.i32> [--device cpu|cuda|vulkan]\n"
+            "       pf-cli --classify <model.gguf> <threshold> [cpu|gpu|cuda|vulkan|cuda:N] < text.txt\n"
+            "       pf-cli --model <model.gguf> --tokens <tokens.i32> [--device cpu|gpu|cuda|vulkan|cuda:N]\n"
             "              [--threads N] [--window N] [--dump-taps DIR] [--logits-out FILE]\n"
             "              [--offsets <offsets.i32> --text <text.txt> [--threshold F]]\n");
         return 2;

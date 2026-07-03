@@ -45,12 +45,25 @@ huggingface-cli download sumeshi/privacy-filter-jp-GGUF privacy-filter-jp-f16.gg
 
 ## Usage
 
-CLI で分類します。`--classify` の第 2 引数は検出のしきい値で、末尾でデバイスを指定できます。
+CLI で分類します。`--classify` は UTF-8 テキストを stdin から読み取ります。
+形式は `pf-cli --classify <model.gguf> <threshold> [device]` です。`device` は省略可能で、`cpu`、`gpu`、`cuda`、`vulkan`、または `cuda:1` のような GPU 番号指定を渡せます。
 
 ```sh
 build/release/pf-cli --info privacy-filter-jp-f16.gguf
 echo "配送先：〒160-0022 東京都新宿区新宿3-99-88 サンプルマンション101号室" | \
-  build/release/pf-cli --classify privacy-filter-jp-f16.gguf 0.5   # [cpu|cuda|vulkan]
+  build/release/pf-cli --classify privacy-filter-jp-f16.gguf 0.5 cpu
+```
+
+ソースビルドではなく展開済みの release バイナリを使う場合は、展開先フォルダから実行します。
+
+```sh
+./pf-cli --info privacy-filter-jp-f16.gguf
+echo "配送先：〒160-0022 東京都新宿区新宿3-99-88 サンプルマンション101号室" | \
+  ./pf-cli --classify privacy-filter-jp-f16.gguf 0.5 cpu
+
+# Windows PowerShell:
+"配送先：〒160-0022 東京都新宿区新宿3-99-88 サンプルマンション101号室" |
+  .\pf-cli.exe --classify privacy-filter-jp-f16.gguf 0.5 cpu
 ```
 
 プログラムから利用する場合は、[`include/pf.h`](include/pf.h) のフラット C API を使います。`pf_ctx` は不透明ハンドラで、バッファは呼び出し側が所有し、例外は API 境界を越えません。

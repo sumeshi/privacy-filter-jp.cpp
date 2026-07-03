@@ -11,7 +11,7 @@ demo/traces/scan/{content.json,engines.json}.
 
   python3 gen_scan.py --cli build/release/pf-cli \
       --model ~/ggufs_perf/pf-q8experts.gguf --ld build/release/ggml/src \
-      --tps 366 --device "Raspberry Pi 5 · CPU · q8 @ 1.5 GHz"
+      --run-device cpu --tps 366 --device "Raspberry Pi 5 · CPU · q8 @ 1.5 GHz"
 """
 import argparse, json, os, struct, subprocess
 from pathlib import Path
@@ -20,7 +20,9 @@ HERE = Path(__file__).resolve().parent
 
 
 def run_cli(cli, ld, args, stdin=None):
-    env = dict(os.environ, LD_LIBRARY_PATH=ld)
+    env = dict(os.environ)
+    if ld:
+        env["LD_LIBRARY_PATH"] = ld
     return subprocess.run([cli, *args], input=stdin, capture_output=True, env=env)
 
 
@@ -36,19 +38,26 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--cli", required=True)
     ap.add_argument("--model", required=True)
-    ap.add_argument("--ld", default="", help="LD_LIBRARY_PATH for the cli (shared ggml build)")
+    ap.add_argument("--ld", default="", help="LD_LIBRARY_PATH for source-build shared ggml libraries; omit for release binaries")
     ap.add_argument("--doc", default=str(HERE / "scan_doc.txt"))
     ap.add_argument("--scene", default=str(HERE / "traces/scan"))
     ap.add_argument("--threshold", default="0.5")
+    ap.add_argument("--run-device", default="cpu",
+                    help="pf-cli classify device argument: cpu, gpu, cuda, vulkan, cuda:1, ...")
     ap.add_argument("--tps", type=float, default=0.0, help="measured engine throughput (tok/s)")
     ap.add_argument("--label", default="privacy-filter.cpp")
-    ap.add_argument("--device", default="Raspberry Pi 5 · CPU")
+    ap.add_argument("--device", default="Raspberry Pi 5 · CPU",
+                    help="display label written to engines.json")
     ap.add_argument("--note", default="")
     a = ap.parse_args()
 
     doc_bytes = Path(a.doc).read_bytes()
     n_tok = token_count(a.cli, a.ld, a.model, doc_bytes)
-    r = run_cli(a.cli, a.ld, ["--classify", a.model, a.threshold, "cpu"], stdin=doc_bytes)
+    classify_args = ["--classify", a.model, a.threshold]
+    if a.run_device:
+        classify_args.append(a.run_device)
+    r = run_cli(a.cli, a.ld, classify_args, stdin=doc_bytes)
+    r.check_returncode()
     ents_raw = json.loads(r.stdout)
 
     # pf-cli returns UTF-8 *byte* offsets; pii_scan.py indexes the document as a
