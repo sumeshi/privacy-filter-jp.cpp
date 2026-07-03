@@ -15,6 +15,10 @@
 #include <string>
 #include <vector>
 
+#ifdef _WIN32
+#  include <windows.h>
+#endif
+
 static int info(const char * path) {
     pf::model_file mf;
     if (!mf.open(path, /*with_data =*/ false)) {
@@ -329,6 +333,12 @@ static int run_text_mode(bool classify_mode, int argc, char ** argv, int model_i
 }
 
 int main(int argc, char ** argv) {
+#ifdef _WIN32
+    // The CLI emits UTF-8 (Japanese labels/examples); switch the console
+    // away from the OEM codepage so output isn't mojibake'd.
+    SetConsoleOutputCP(CP_UTF8);
+    SetConsoleCP(CP_UTF8);
+#endif
     if (argc < 2 || std::strcmp(argv[1], "--help") == 0 || std::strcmp(argv[1], "-h") == 0) {
         return usage(argc < 2 ? 2 : 0);
     }

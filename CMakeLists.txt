@@ -29,6 +29,14 @@ if (PF_CUDA)
 endif()
 set(GGML_BUILD_TESTS    OFF)
 set(GGML_BUILD_EXAMPLES OFF)
+
+# ggml defaults to a shared lib (libggml.so.0), which the bare pf-cli binary
+# can't find at runtime (no RPATH to ../ggml/src). Default to a static build
+# so pf-cli ships as a single self-contained executable. Presets/users that
+# want the backend-DL portable layout can still pass -DBUILD_SHARED_LIBS=ON.
+if (NOT DEFINED BUILD_SHARED_LIBS)
+    set(BUILD_SHARED_LIBS OFF CACHE BOOL "Build shared libraries" )
+endif()
 add_subdirectory(ggml)
 
 if (PF_FUZZ)
@@ -42,8 +50,13 @@ endif()
 # cl parses -Wextra as /W + numeric warning level (error D8021).
 if (MSVC)
     set(PF_WARNING_FLAGS /W4)
+    # Source files are UTF-8 and the CLI writes UTF-8 (Japanese labels/help);
+    # without /utf-8 cl assumes the OEM codepage and mangles both literals
+    # and stdout.
+    set(PF_MSVC_UTF8 /utf-8)
 else()
     set(PF_WARNING_FLAGS -Wall -Wextra)
+    set(PF_MSVC_UTF8 "")
 endif()
 
 add_library(pf STATIC
@@ -56,17 +69,18 @@ add_library(pf STATIC
 )
 target_include_directories(pf PUBLIC include)
 target_link_libraries(pf PUBLIC ggml)
-target_compile_options(pf PRIVATE ${PF_WARNING_FLAGS})
+target_compile_options(pf PRIVATE ${PF_WARNING_FLAGS} ${PF_MSVC_UTF8})
 
 if (PF_BUILD_TOOLS)
     add_executable(pf-cli tools/pf-cli.cpp)
     target_link_libraries(pf-cli PRIVATE pf)
     target_include_directories(pf-cli PRIVATE src)
-    target_compile_options(pf-cli PRIVATE ${PF_WARNING_FLAGS})
+    target_compile_options(pf-cli PRIVATE ${PF_WARNING_FLAGS} ${PF_MSVC_UTF8})
 
     add_executable(pf-bench bench/pf-bench.cpp)
     target_link_libraries(pf-bench PRIVATE pf)
     target_include_directories(pf-bench PRIVATE src)
+    target_compile_options(pf-bench PRIVATE ${PF_WARNING_FLAGS} ${PF_MSVC_UTF8})
 
     # GFLOP/s by dtype/shape -- diagnostic for the CPU matmul analysis
     # (docs/cpu-perf.md). Links ggml directly; no pf/model deps.
