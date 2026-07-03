@@ -40,7 +40,20 @@ jobs:
           mkdir -p "$NAME"
           # pf-cli plus the ggml runtime libraries it dlopen()s at run time.
           find build/release-portable -type f -name 'pf-cli' -exec cp {} "$NAME/" \;
+          # Shared libs are staged as e.g. libggml.so.0.15.1 with SONAME
+          # symlinks (libggml.so.0, libggml-base.so.0) pointing at them.
+          # `find -type f` drops the symlinks, leaving the loader unable
+          # to resolve NEEDED "libggml.so.0". Copy the regular files, then
+          # restore the SONAME links as relative links inside the staging
+          # dir so the archive is self-contained.
           find build/release-portable -type f \( -name '*.so' -o -name '*.so.*' \) -exec cp {} "$NAME/" \;
+          for so in "$NAME"/*.so.*.*; do
+            [ -e "$so" ] || continue
+            base=$(basename "$so")
+            # libfoo.so.0.15.1 -> libfoo.so.0  (strip MINOR.PATCH)
+            link=${base%.*.*}
+            ln -sf "$base" "$NAME/$link"
+          done
           cp README.md LICENSE "$NAME/"
           ls -la "$NAME"
           tar czf "$NAME.tar.gz" "$NAME"
