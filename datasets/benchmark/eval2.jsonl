@@ -1,0 +1,52 @@
+{"text": "サンプル精機株式会社\n購買部 西村健二様\n\nいつもお世話になっております。みらい電子の柴田です。\nご依頼の見積書を2026年7月10日までにお送りいたします。\nご不明点は052-761-4498までご連絡ください。\n\n――――――――――\nみらい電子株式会社 営業一課\n柴田孝之（シバタタカユキ）\nTEL:０５２－７６１－４４９８／Mail:t.shibata@example.jp\n〒460-0008 愛知県名古屋市中区栄3-99-12 テストタワー9F\n――――――――――", "spans": [{"start": 15, "end": 19, "label": "private_person"}, {"start": 43, "end": 45, "label": "private_person"}, {"start": 57, "end": 67, "label": "private_date"}, {"start": 85, "end": 97, "label": "private_phone"}, {"start": 135, "end": 139, "label": "private_person"}, {"start": 140, "end": 147, "label": "private_person"}, {"start": 153, "end": 165, "label": "private_phone"}, {"start": 171, "end": 191, "label": "private_email"}, {"start": 192, "end": 228, "label": "private_address"}]}
+{"text": "【入会申込書】\nフリガナ:オカベ　ミナコ\n氏名:岡部　美奈子\n生年月日:昭和58年4月12日\n住所:〒221-0835 神奈川県横浜市神奈川区鶴屋町2-99-1 サンプルレジデンス803\n電話番号:08034567821\nメール:minako_okabe@example.test\n会員番号:M-882901\nご職業:会社員", "spans": [{"start": 13, "end": 20, "label": "private_person"}, {"start": 24, "end": 30, "label": "private_person"}, {"start": 36, "end": 46, "label": "private_date"}, {"start": 50, "end": 93, "label": "private_address"}, {"start": 99, "end": 110, "label": "private_phone"}, {"start": 115, "end": 140, "label": "private_email"}, {"start": 146, "end": 154, "label": "account_number"}]}
+{"text": "受付ID:R20260702-0031\nお客様:堀田様（会員番号 C4407219）\n2026/07/02 14:05 入電。請求金額の相違について。\n折り返し先:070-5566-0912（堀田様携帯）\n次回連絡予定:7月4日の午前中\n対応者:カスタマーサポート部", "spans": [{"start": 5, "end": 19, "label": "account_number"}, {"start": 24, "end": 26, "label": "private_person"}, {"start": 33, "end": 41, "label": "account_number"}, {"start": 43, "end": 53, "label": "private_date"}, {"start": 82, "end": 95, "label": "private_phone"}, {"start": 96, "end": 98, "label": "private_person"}, {"start": 110, "end": 114, "label": "private_date"}]}
+{"text": "ご注文ありがとうございます。\n注文番号:A2026063011\nお届け先:大阪府枚方市香里園町9-99-9　池内洋介様\nお届け予定日:2026/07/06\n配送状況の確認:https://track.example.test/p/8842xu\nお問い合わせ:0120-330-118（9時〜18時）", "spans": [{"start": 20, "end": 31, "label": "account_number"}, {"start": 37, "end": 53, "label": "private_address"}, {"start": 54, "end": 58, "label": "private_person"}, {"start": 67, "end": 77, "label": "private_date"}, {"start": 86, "end": 121, "label": "private_url"}, {"start": 129, "end": 141, "label": "private_phone"}]}
+{"text": "第12回定例会 議事録\n日時:2026年6月27日 10:00〜11:00\n出席者:三宅、小田切、葛西（記）\n決定事項:次期リリースをv3.2に延期する。\n資料:https://docs.example.jp/minutes/0627\n次回:7月11日 同時刻", "spans": [{"start": 15, "end": 25, "label": "private_date"}, {"start": 42, "end": 44, "label": "private_person"}, {"start": 45, "end": 48, "label": "private_person"}, {"start": 49, "end": 51, "label": "private_person"}, {"start": 81, "end": 117, "label": "private_url"}, {"start": 121, "end": 126, "label": "private_date"}]}
+{"text": "【インシデント報告】\n発見者:開発部 浅野誠\n概要:社内リポジトリにAPIキーが誤ってコミットされていた。\n該当キー:sk-test-Vg82LmNpQr44TzWwXy19AbCd\n対象アカウント:svc-deploy-102\n対応:キーを失効し、a.asano@example.jpへ完了報告済み。", "spans": [{"start": 19, "end": 22, "label": "private_person"}, {"start": 59, "end": 91, "label": "secret"}, {"start": 100, "end": 114, "label": "account_number"}, {"start": 125, "end": 143, "label": "private_email"}]}
+{"text": "請求書\n請求番号:INV-2026-0455\n請求先:〒812-0011 福岡県福岡市博多区博多駅前2-99-3 村井商店 御中\nお支払期日:2026年7月31日\n振込先:サンプル銀行 中央支店 普通 8814452\n金額:¥152,900（税込）", "spans": [{"start": 9, "end": 22, "label": "account_number"}, {"start": 27, "end": 56, "label": "private_address"}, {"start": 71, "end": 81, "label": "private_date"}, {"start": 101, "end": 108, "label": "account_number"}]}
+{"text": "【スタッフ登録シート】\n氏名:高村　沙耶（タカムラ　サヤ）\n生年月日:1995-11-02\n最寄駅:荻窪駅\n連絡先:+81-90-6633-2810\nメール:saya.t@mail.example.jp\n基礎年金番号:6210-448121", "spans": [{"start": 15, "end": 20, "label": "private_person"}, {"start": 21, "end": 28, "label": "private_person"}, {"start": 35, "end": 45, "label": "private_date"}, {"start": 58, "end": 74, "label": "private_phone"}, {"start": 79, "end": 101, "label": "private_email"}, {"start": 109, "end": 120, "label": "account_number"}]}
+{"text": "人事部内メモ（取扱注意）\n対象社員:長谷部亮（社員番号 S-30412）\nマイナンバー:8102 4467 9035\n提出書類:扶養控除等申告書\n提出期限:2026年7月15日", "spans": [{"start": 18, "end": 22, "label": "private_person"}, {"start": 28, "end": 35, "label": "account_number"}, {"start": 44, "end": 58, "label": "account_number"}, {"start": 78, "end": 88, "label": "private_date"}]}
+{"text": "ご予約を承りました。\n予約番号:Y-77015\nご宿泊者:ONO Rika様\nチェックイン:2026/08/01\nご登録の電話番号:06(6412)8890\n前日までの変更はhttps://stay.example.jp/r/Y-77015から可能です。", "spans": [{"start": 16, "end": 23, "label": "account_number"}, {"start": 29, "end": 37, "label": "private_person"}, {"start": 46, "end": 56, "label": "private_date"}, {"start": 66, "end": 78, "label": "private_phone"}, {"start": 87, "end": 120, "label": "private_url"}]}
+{"text": "氏名:榊原元治（サカキバラモトハル）", "spans": [{"start": 3, "end": 7, "label": "private_person"}, {"start": 8, "end": 17, "label": "private_person"}]}
+{"text": "フリガナ:クドウ　レイナ\n氏名:工藤　玲奈", "spans": [{"start": 5, "end": 12, "label": "private_person"}, {"start": 16, "end": 21, "label": "private_person"}]}
+{"text": "ご担当の水島様よりご連絡いただけますと幸いです。", "spans": [{"start": 4, "end": 6, "label": "private_person"}]}
+{"text": "営業部長の大森和樹が本件を担当します。", "spans": [{"start": 5, "end": 9, "label": "private_person"}]}
+{"text": "テスト建設株式会社の井口紗英と申します。", "spans": [{"start": 10, "end": 14, "label": "private_person"}]}
+{"text": "松岡海斗・松岡未来（ご連名）でのお申込みです。", "spans": [{"start": 0, "end": 4, "label": "private_person"}, {"start": 5, "end": 9, "label": "private_person"}]}
+{"text": "署名:MATSUOKA Kaito", "spans": [{"start": 3, "end": 17, "label": "private_person"}]}
+{"text": "送付先:東京都杉並区高円寺南4-99-1 コーポあおぞら202号室 田中様方", "spans": [{"start": 4, "end": 33, "label": "private_address"}, {"start": 34, "end": 36, "label": "private_person"}]}
+{"text": "住所:京都府京都市中京区寺町通御池上る上本能寺前町488-99", "spans": [{"start": 3, "end": 31, "label": "private_address"}]}
+{"text": "勤務先住所:大阪府吹田市江坂町１－９９－８ 江坂サンプルビル４Ｆ", "spans": [{"start": 6, "end": 32, "label": "private_address"}]}
+{"text": "北海道札幌市中央区北一条西2丁目99番地 テストビルヂング5階に移転しました。", "spans": [{"start": 0, "end": 31, "label": "private_address"}]}
+{"text": "緊急連絡先:０８０－４４２１－９９７６", "spans": [{"start": 6, "end": 19, "label": "private_phone"}]}
+{"text": "TEL 03-5544-0011（代表）", "spans": [{"start": 4, "end": 16, "label": "private_phone"}]}
+{"text": "携帯は09077653302です。", "spans": [{"start": 3, "end": 14, "label": "private_phone"}]}
+{"text": "海外からは+81-3-4433-2211へおかけください。", "spans": [{"start": 5, "end": 20, "label": "private_phone"}]}
+{"text": "ご予約は0570-064-880（ナビダイヤル）まで。", "spans": [{"start": 4, "end": 16, "label": "private_phone"}]}
+{"text": "確認用アドレス:k.mizushima@example.invalid", "spans": [{"start": 8, "end": 35, "label": "private_email"}]}
+{"text": "書類はsoumu-uketsuke@corp.example.jp宛にお送りください。", "spans": [{"start": 3, "end": 33, "label": "private_email"}]}
+{"text": "口座振替の設定はhttps://pay.example.jp/setup?uid=88213からお願いします。", "spans": [{"start": 8, "end": 46, "label": "private_url"}]}
+{"text": "解約手続き:https://example.invalid/cancel/UX-2210", "spans": [{"start": 6, "end": 44, "label": "private_url"}]}
+{"text": "障害情報はhttps://status.example.test/で公開しています。", "spans": [{"start": 5, "end": 33, "label": "private_url"}]}
+{"text": "APIキー:pk_test_YttW3k9BqLm22ZxCvA815Dq0", "spans": [{"start": 6, "end": 38, "label": "secret"}]}
+{"text": "認証トークン:eyJhbGciOiJub25l.dGVzdC1wYXlsb2Fk.ZmFrZXNpZw", "spans": [{"start": 7, "end": 51, "label": "secret"}]}
+{"text": "初期パスワード:Temp!2026-start", "spans": [{"start": 8, "end": 23, "label": "secret"}]}
+{"text": "環境変数 API_SECRET=api_Qm4vv81LkOPzz73Wd0aYt2Xc を平文で共有しないでください。", "spans": [{"start": 16, "end": 44, "label": "secret"}]}
+{"text": "BearerトークンはBearer 4uXp0qLmVz88TTwRkAaY21GhcNvBです。", "spans": [{"start": 11, "end": 46, "label": "secret"}]}
+{"text": "お誕生日:平成9年3月30日", "spans": [{"start": 5, "end": 14, "label": "private_date"}]}
+{"text": "契約日:R8.1.20", "spans": [{"start": 4, "end": 11, "label": "private_date"}]}
+{"text": "納品予定:2026.07.22", "spans": [{"start": 5, "end": 15, "label": "private_date"}]}
+{"text": "運転免許証番号:第302886414375号", "spans": [{"start": 9, "end": 21, "label": "account_number"}]}
+{"text": "旅券番号:TR8812995", "spans": [{"start": 5, "end": 14, "label": "account_number"}]}
+{"text": "保険証記号番号:44913022-08", "spans": [{"start": 8, "end": 19, "label": "account_number"}]}
+{"text": "在留カード番号:AB84203175CD", "spans": [{"start": 8, "end": 20, "label": "account_number"}]}
+{"text": "ゆうちょ記号番号:14560-22981406", "spans": [{"start": 9, "end": 23, "label": "account_number"}]}
+{"text": "お見積金額は¥482,900（税込）です。", "spans": []}
+{"text": "対象製品:XR-2200シリーズ", "spans": []}
+{"text": "v11.0.3で修正済みです。", "spans": []}
+{"text": "エラーコード:0x8004FE21", "spans": []}
+{"text": "15時から第2会議室で品質会議を行います。", "spans": []}
+{"text": "アンケートの回収は締め切りました。", "spans": []}
+{"text": "広報経由の取材依頼は書面でお願いします。", "spans": []}
+{"text": "添付の仕様書をご査収ください。", "spans": []}

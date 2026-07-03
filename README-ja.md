@@ -93,16 +93,19 @@ pf_free(ctx);
 
 ## Benchmark
 
-小規模な回帰確認用データセット（`datasets/benchmark/`）での span 完全一致 F1 を、ファインチューニング前後で比較した結果です。
+回帰確認用データセット（`datasets/benchmark/`）での span 完全一致 micro F1 です。
 
-| ラベル | Before | After |
+v2 ベンチマーク（`eval2.jsonl` / `challenge2.jsonl`、手書き 106 例）は現実的な条件を対象にしています: 複数段落の業務文書（署名ブロック付きメール・申込フォーム・問い合わせ対応ログ）、日本の電話番号フォーマット変種、日本特有の識別番号（マイナンバー・運転免許証番号・旅券番号・基礎年金番号・保険証記号番号。いずれも `account_number` に集約）、フリガナ併記の氏名、PII を含まない負例です。
+
+| ベンチマーク | v1 モデル | v2 モデル |
 |---|---:|---:|
-| `private_person` | 0.583 | 0.917 |
-| `private_address` | 0.400 | 1.000 |
-| その他 6 ラベル（回帰確認） | 0.400 | 0.833 |
-| 全体（micro F1） | 0.475 | 0.929 |
+| `eval2`（現実的な文書） | 0.400 | **0.717** |
+| `challenge2`（blind held-out） | 0.453 | **0.693** |
+| `challenge`（v1・回帰確認） | 0.912 | **0.964** |
 
-このベンチマークは動作確認と回帰検知を目的とした小規模なもので、実運用精度を示すものではありません。詳細な数値と限界事項は、公開モデルのページ [sumeshi/privacy-filter-jp-GGUF](https://huggingface.co/sumeshi/privacy-filter-jp-GGUF) を参照してください。
+両列とも、ランタイム同梱のスパン後処理（端のトリムと、連名・フリガナ区切りでの人名スパン分割。C API / `pf-cli` / `scripts/run_pf_hf.py` が共通で適用）込みで測定しています。v1 の split（`train`/`eval`/`challenge`、短文 56 行）は v1 学習データとテンプレート由来の同一テキストを共有していたことが後から判明したため、過去に公表した v1 の数値（全体 0.929）は楽観的でした。v1 split は回帰確認用としてのみ残しています。また完全一致 F1 は厳格な指標で、`eval2` における v2 モデルの残存エラーの大半は境界ズレであり、検出漏れではありません。
+
+このベンチマークは依然小規模で、実運用精度を示すものではありません。Hugging Face の [sumeshi/privacy-filter-jp-GGUF](https://huggingface.co/sumeshi/privacy-filter-jp-GGUF) は現在 v1 モデルを公開しており、v2 のアップロードは準備中です。データセット設計と再現手順は [`docs/finetuning-jp.md`](docs/finetuning-jp.md) を参照してください。
 
 ## Fine-tuning
 

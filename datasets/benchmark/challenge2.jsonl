@@ -1,0 +1,54 @@
+{"text": "テスト管財株式会社\n管理部 矢部聡美様\n\nお世話になっております。サンプル設備の小柳でございます。\n点検報告書を2026年8月3日までに提出いたします。\n当日の入館手続きについては0742-55-3108の小柳までお願いします。\n\n＝＝＝＝＝＝＝＝\nサンプル設備株式会社 保守二課\n小柳達也（コヤナギタツヤ）\n携帯:０７０－８８１２－４４０６\nMail:t-koyanagi@example.test\n〒630-8228 奈良県奈良市上三条町9-99 みらい上三条ビル2F\n＝＝＝＝＝＝＝＝", "spans": [{"start": 14, "end": 18, "label": "private_person"}, {"start": 40, "end": 42, "label": "private_person"}, {"start": 56, "end": 65, "label": "private_date"}, {"start": 90, "end": 102, "label": "private_phone"}, {"start": 103, "end": 105, "label": "private_person"}, {"start": 141, "end": 145, "label": "private_person"}, {"start": 146, "end": 153, "label": "private_person"}, {"start": 158, "end": 171, "label": "private_phone"}, {"start": 177, "end": 200, "label": "private_email"}, {"start": 201, "end": 236, "label": "private_address"}]}
+{"text": "【賃貸入居申込書】\nフリガナ：ニシオカ　ケンタ\n氏名：西岡　健太\n生年月日：平成2年12月8日\n現住所：兵庫県尼崎市南塚口町8-99-2 あおぞら荘105号室\n日中連絡先：06-6301-7742（勤務先）\nメールアドレス：kenta.nishioka3@example.jp\n緊急連絡先：西岡　文枝（母） 0798-44-2210\n性別：回答しない", "spans": [{"start": 15, "end": 23, "label": "private_person"}, {"start": 27, "end": 32, "label": "private_person"}, {"start": 38, "end": 47, "label": "private_date"}, {"start": 52, "end": 79, "label": "private_address"}, {"start": 86, "end": 98, "label": "private_phone"}, {"start": 112, "end": 138, "label": "private_email"}, {"start": 145, "end": 150, "label": "private_person"}, {"start": 154, "end": 166, "label": "private_phone"}]}
+{"text": "対応履歴 #T-2026-08812\nヤマグチ様より解約希望の入電。\n契約番号:CNTR-2024-118\n本人確認:生年月日 1988/02/29 → 1988/02/19の誤りと判明\n折返し:050-3355-8241（19時以降）\nエスカレーション先:リテンション担当 布施", "spans": [{"start": 6, "end": 18, "label": "account_number"}, {"start": 19, "end": 23, "label": "private_person"}, {"start": 40, "end": 53, "label": "account_number"}, {"start": 64, "end": 74, "label": "private_date"}, {"start": 77, "end": 87, "label": "private_date"}, {"start": 98, "end": 111, "label": "private_phone"}, {"start": 138, "end": 140, "label": "private_person"}]}
+{"text": "発送完了のお知らせ\n\n桐生美月様\n以下の内容で発送いたしました。\n伝票番号:482-2109-3376\nお届け先:〒903-0801 沖縄県那覇市首里末吉町4-99-9 ひまわりアパート303\n配達予定:7月8日 午前中\n再配達の依頼:https://redeliver.example.test/e/482-2109-3376\nドライバー直通:090 4418 7726", "spans": [{"start": 11, "end": 15, "label": "private_person"}, {"start": 38, "end": 51, "label": "account_number"}, {"start": 57, "end": 96, "label": "private_address"}, {"start": 102, "end": 106, "label": "private_date"}, {"start": 118, "end": 164, "label": "private_url"}, {"start": 173, "end": 186, "label": "private_phone"}]}
+{"text": "採用面接メモ（社外秘）\n候補者:柚木遥（ユノキハルカ）\n面接日:令和8年6月30日\n紹介元:株式会社山本製作所（エージェント経由）\n評価:コミュニケーション良好。二次面接へ進める。\n候補者連絡先:haruka-yunoki@example.invalid", "spans": [{"start": 16, "end": 19, "label": "private_person"}, {"start": 20, "end": 26, "label": "private_person"}, {"start": 32, "end": 41, "label": "private_date"}, {"start": 98, "end": 127, "label": "private_email"}]}
+{"text": "【障害報告 第2報】\n検知者:氏家係長\n内容:検証環境の.envがアーカイブに混入。\n流出値:AWS_SECRET_KEY=wJalrTESTKEY44xPq0BbFAKE0demo\n同梱ログに顧客メール y.kirishima@example.jp を含む行を確認。\n対象システム利用ID:app-batch-077\n次回報告:7月5日 17時", "spans": [{"start": 15, "end": 17, "label": "private_person"}, {"start": 62, "end": 91, "label": "secret"}, {"start": 103, "end": 125, "label": "private_email"}, {"start": 146, "end": 159, "label": "account_number"}, {"start": 165, "end": 169, "label": "private_date"}]}
+{"text": "領収書（控）\n取引番号:RCP-88-120445\nお客様:大池様\nお支払方法:口座振替（テスト銀行 北支店 普通 1120884）\n領収日:2026-07-01\n但書:年会費として\nお問い合わせ:0800-777-2245", "spans": [{"start": 12, "end": 25, "label": "account_number"}, {"start": 30, "end": 32, "label": "private_person"}, {"start": 58, "end": 65, "label": "account_number"}, {"start": 71, "end": 81, "label": "private_date"}, {"start": 99, "end": 112, "label": "private_phone"}]}
+{"text": "健康診断のご案内\n対象:戸田優子様（社員番号 E-11208）\n受診期限:2026年9月30日\n会場:東京都港区芝公園1-99-2 サンプルメディカルビル6F\n予約サイト:https://kenshin.example.jp/booking\n保険証記号番号 50288114-03 を受付でご提示ください。", "spans": [{"start": 12, "end": 16, "label": "private_person"}, {"start": 23, "end": 30, "label": "account_number"}, {"start": 37, "end": 47, "label": "private_date"}, {"start": 51, "end": 79, "label": "private_address"}, {"start": 86, "end": 120, "label": "private_url"}, {"start": 129, "end": 140, "label": "account_number"}]}
+{"text": "> 大西さん\n> 先日の見積の件、いかがでしょうか。\n\nお待たせしております。2026/07/09までに回答いたします。\n至急の場合は011-676-4432（内線204）へお願いします。\n\n株式会社サンプル商事 大西亮平\nr.onishi@example.jp", "spans": [{"start": 2, "end": 4, "label": "private_person"}, {"start": 39, "end": 49, "label": "private_date"}, {"start": 67, "end": 79, "label": "private_phone"}, {"start": 107, "end": 111, "label": "private_person"}, {"start": 112, "end": 131, "label": "private_email"}]}
+{"text": "【会員情報変更受付】\n受付番号:W20260701-118\n会員:コバヤシ　ナオ様\n変更項目:住所\n新住所:愛媛県松山市大街道3-99-1 パークサイドマンション701\n変更手続き完了通知:https://member.example.test/done/W20260701-118", "spans": [{"start": 16, "end": 29, "label": "account_number"}, {"start": 33, "end": 40, "label": "private_person"}, {"start": 54, "end": 84, "label": "private_address"}, {"start": 95, "end": 141, "label": "private_url"}]}
+{"text": "佐々木係長が承認済みです。", "spans": [{"start": 0, "end": 3, "label": "private_person"}]}
+{"text": "経理部 戸川宛に回付してください。", "spans": [{"start": 4, "end": 6, "label": "private_person"}]}
+{"text": "氏名:三好　凛（ミヨシ　リン）", "spans": [{"start": 3, "end": 7, "label": "private_person"}, {"start": 8, "end": 14, "label": "private_person"}]}
+{"text": "申請者:Sato Masaki（在外勤務）", "spans": [{"start": 4, "end": 15, "label": "private_person"}]}
+{"text": "小谷野遥人様、小谷野真央様の2名でご案内します。", "spans": [{"start": 0, "end": 5, "label": "private_person"}, {"start": 7, "end": 12, "label": "private_person"}]}
+{"text": "株式会社山本製作所の担当窓口までお問い合わせください。", "spans": []}
+{"text": "帰省先:鹿児島県霧島市国分中央3-99-22 原口様方", "spans": [{"start": 4, "end": 22, "label": "private_address"}, {"start": 23, "end": 25, "label": "private_person"}]}
+{"text": "本籍地:石川県金沢市広坂１丁目９９番９号", "spans": [{"start": 4, "end": 20, "label": "private_address"}]}
+{"text": "新店舗は東京都新宿区西新宿8-99-5 サンプル第2ビル3Fにオープンします。", "spans": [{"start": 4, "end": 30, "label": "private_address"}]}
+{"text": "請求書送付先:〒760-0017 香川県高松市番町5-99-1（経理部気付）", "spans": [{"start": 7, "end": 31, "label": "private_address"}]}
+{"text": "夜間窓口:0120-990-556", "spans": [{"start": 5, "end": 17, "label": "private_phone"}]}
+{"text": "直通:082(544)7810", "spans": [{"start": 3, "end": 15, "label": "private_phone"}]}
+{"text": "SMSは08044921183に届きます。", "spans": [{"start": 4, "end": 15, "label": "private_phone"}]}
+{"text": "国際発信:+81 45 682 3319", "spans": [{"start": 5, "end": 20, "label": "private_phone"}]}
+{"text": "総合案内:０５７０－０２２－３３８（有料）", "spans": [{"start": 5, "end": 17, "label": "private_phone"}]}
+{"text": "FAX:098-869-2214でも受け付けます。", "spans": [{"start": 4, "end": 16, "label": "private_phone"}]}
+{"text": "請求書PDFはseikyu@billing.example.jpから送付されます。", "spans": [{"start": 7, "end": 32, "label": "private_email"}]}
+{"text": "返信はm_toda99@example.invalidまでお願いします。", "spans": [{"start": 3, "end": 27, "label": "private_email"}]}
+{"text": "本人確認リンク:https://auth.example.invalid/verify?sid=ZZ8123&exp=600", "spans": [{"start": 8, "end": 62, "label": "private_url"}]}
+{"text": "採用ページ:https://recruit.example.jp/2027/entry", "spans": [{"start": 6, "end": 43, "label": "private_url"}]}
+{"text": "メンテナンス告知:https://info.example.test/maintenance/2026-q3", "spans": [{"start": 9, "end": 54, "label": "private_url"}]}
+{"text": "デプロイキー:sk-test-N0realKeyZZ917Abqm44LpXe", "spans": [{"start": 7, "end": 39, "label": "secret"}]}
+{"text": "ワンタイムパスワード:884213（10分間有効）", "spans": [{"start": 11, "end": 17, "label": "secret"}]}
+{"text": "接続文字列のパスワード部 Passw0rd-dummy-77 は失効済みです。", "spans": [{"start": 13, "end": 30, "label": "secret"}]}
+{"text": "旧トークン api_LEGACYtok88MMqz31WvvC0xTe は使用しないでください。", "spans": [{"start": 6, "end": 35, "label": "secret"}]}
+{"text": "署名鍵:pk_test_Zw31MnB77QpLtY0acV92Ks8d", "spans": [{"start": 4, "end": 36, "label": "secret"}]}
+{"text": "生年月日:昭和41年11月3日", "spans": [{"start": 5, "end": 15, "label": "private_date"}]}
+{"text": "初回利用日:令和元年5月1日", "spans": [{"start": 6, "end": 14, "label": "private_date"}]}
+{"text": "解約受付日:2026/6/28", "spans": [{"start": 6, "end": 15, "label": "private_date"}]}
+{"text": "お引越し予定日:２０２６年８月１日", "spans": [{"start": 8, "end": 17, "label": "private_date"}]}
+{"text": "個人番号:482210937566", "spans": [{"start": 5, "end": 17, "label": "account_number"}]}
+{"text": "免許証番号:505477281930（第一種）", "spans": [{"start": 6, "end": 18, "label": "account_number"}]}
+{"text": "パスポート番号:TK4471820", "spans": [{"start": 8, "end": 17, "label": "account_number"}]}
+{"text": "基礎年金番号:3308-114452", "spans": [{"start": 7, "end": 18, "label": "account_number"}]}
+{"text": "被保険者記号・番号:77120945-16", "spans": [{"start": 10, "end": 21, "label": "account_number"}]}
+{"text": "法人口座:みらい銀行 東支店 当座 0084417", "spans": [{"start": 18, "end": 25, "label": "account_number"}]}
+{"text": "第3四半期の出荷は12,400台でした。", "spans": []}
+{"text": "型番:KD-880IIの保証期間は2年です。", "spans": []}
+{"text": "バージョン3.1.7を適用後に再検証します。", "spans": []}
+{"text": "ステータス503が断続的に返却されています。", "spans": []}
+{"text": "10時より4階の応接室Bで打ち合わせです。", "spans": []}
+{"text": "歩留まりは目標水準を維持しています。", "spans": []}
+{"text": "合同会社みらいデザインとの契約を更新しました。", "spans": []}
+{"text": "定例の朝会は司会持ち回りです。", "spans": []}

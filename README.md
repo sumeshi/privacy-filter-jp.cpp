@@ -93,16 +93,19 @@ The eight target labels are listed below. Their definitions live in [`label_spac
 
 ## Benchmark
 
-Exact-match span F1 on a small regression dataset (`datasets/benchmark/`), comparing before and after fine-tuning.
+Exact-match span micro F1 on the regression datasets (`datasets/benchmark/`).
 
-| Label | Before | After |
+The v2 benchmark (`eval2.jsonl` / `challenge2.jsonl`, 106 hand-written examples) targets realistic conditions: multi-paragraph business documents (emails with signature blocks, application forms, support logs), Japanese phone-number format variants, Japan-specific identifiers (My Number, driver's license, passport, pension, health insurance — all mapped to `account_number`), furigana name pairs, and PII-free negatives.
+
+| Benchmark | v1 model | v2 model |
 |---|---:|---:|
-| `private_person` | 0.583 | 0.917 |
-| `private_address` | 0.400 | 1.000 |
-| Other 6 labels (regression check) | 0.400 | 0.833 |
-| Overall (micro F1) | 0.475 | 0.929 |
+| `eval2` (realistic documents) | 0.400 | **0.717** |
+| `challenge2` (blind held-out) | 0.453 | **0.693** |
+| `challenge` (v1, regression) | 0.912 | **0.964** |
 
-This benchmark is small and intended for sanity and regression checking; it does not represent production accuracy. For detailed numbers and limitations, see the published model page [sumeshi/privacy-filter-jp-GGUF](https://huggingface.co/sumeshi/privacy-filter-jp-GGUF).
+Both columns are measured with the runtime's span post-processing (edge trimming and person-span splitting on enumeration/furigana separators), which the C API, `pf-cli`, and `scripts/run_pf_hf.py` all apply. The v1 splits (`train`/`eval`/`challenge`, 56 short single-sentence rows) turned out to share template-generated texts with the v1 training data, so the previously published v1 numbers (0.929 overall) were optimistic; the v1 splits are kept for regression checking only. Exact-match F1 is also strict: on `eval2`, most of the v2 model's remaining errors are span-boundary differences, not missed detections.
+
+This benchmark is still small and does not represent production accuracy. The Hugging Face repo [sumeshi/privacy-filter-jp-GGUF](https://huggingface.co/sumeshi/privacy-filter-jp-GGUF) currently hosts the v1 model; the v2 upload is pending. For dataset design and reproduction steps, see [`docs/finetuning-jp.md`](docs/finetuning-jp.md).
 
 ## Fine-tuning
 

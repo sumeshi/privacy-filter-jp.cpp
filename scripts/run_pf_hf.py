@@ -12,6 +12,7 @@ Output is fed straight into scripts/eval_spans.py.
 """
 import argparse
 import json
+import re
 import sys
 
 import torch
@@ -66,7 +67,11 @@ OUR_LABELS = {
     "private_url",
     "secret",
 }
-MERGE_GAP = 4  # chars: merge same-target spans separated by a small gap (particles/spaces/punctuation)
+MERGE_GAP = 4  # chars: merge same-target spans, but only across whitespace-only gaps
+# Separators that must terminate a person span: enumeration commas, furigana
+# parentheses, slashes. Spaces are NOT separators (names contain internal
+# spaces: "高村　沙耶", "Taro Yamada").
+PERSON_SEPARATORS = re.compile(r"[、，,・／/（）()|｜]+")
 
 
 def decode_bioes(labels: list[str], offsets: list[tuple[int, int]]) -> list[tuple[int, int, str]]:
@@ -99,7 +104,7 @@ def decode_bioes(labels: list[str], offsets: list[tuple[int, int]]) -> list[tupl
     return spans
 
 
-def remap_and_merge(spans: list[tuple[int, int, str]]) -> list[list]:
+def remap_and_merge(spans: list[tuple[int, int, str]], text: str) -> list[list]:
     mapped = []
     for s, e, cat in spans:
         target = cat if cat in OUR_LABELS else CATEGORY_MAP.get(cat)
@@ -108,11 +113,38 @@ def remap_and_merge(spans: list[tuple[int, int, str]]) -> list[list]:
     mapped.sort(key=lambda x: x[0])
     merged: list[list] = []
     for s, e, label in mapped:
-        if merged and merged[-1][2] == label and s - merged[-1][1] <= MERGE_GAP:
+        gap_is_space = merged and not text[merged[-1][1]:s].strip()
+        if merged and merged[-1][2] == label and s - merged[-1][1] <= MERGE_GAP and gap_is_space:
             merged[-1][1] = max(merged[-1][1], e)
         else:
             merged.append([s, e, label])
     return merged
+
+
+def postprocess(spans: list[list], text: str) -> list[list]:
+    """Trim whitespace at span edges; split person spans on separators."""
+    out = []
+    for s, e, label in spans:
+        parts = [(s, e)]
+        if label == "private_person":
+            parts = []
+            pos = s
+            for m in PERSON_SEPARATORS.finditer(text, s, e):
+                if pos < m.start():
+                    parts.append((pos, m.start()))
+                pos = m.end()
+            if pos < e:
+                parts.append((pos, e))
+        for ps, pe in parts:
+            # leading '=' guards against key=value delimiters folded into the
+            # first token; trailing '=' is kept (base64 padding in secrets)
+            while ps < pe and (text[ps].isspace() or text[ps] == "="):
+                ps += 1
+            while pe > ps and text[pe - 1].isspace():
+                pe -= 1
+            if ps < pe:
+                out.append([ps, pe, label])
+    return out
 
 
 def main() -> None:
@@ -144,7 +176,7 @@ def main() -> None:
             for row, ids, offs in zip(batch, pred_ids, offsets):
                 labels = [id2label[t.item()] for t in ids]
                 spans = decode_bioes(labels, offs.tolist())
-                merged = remap_and_merge(spans)
+                merged = postprocess(remap_and_merge(spans, row["text"]), row["text"])
                 out_spans = [{"start": s, "end": e, "label": lbl} for s, e, lbl in merged]
                 f.write(json.dumps({"text": row["text"], "spans": out_spans}, ensure_ascii=False) + "\n")
             print(f"{min(i + args.batch_size, len(rows))}/{len(rows)}", file=sys.stderr, end="\r")
